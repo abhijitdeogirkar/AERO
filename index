@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="mr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SIR Dashboard - Washim</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body { background-color: #f4f7f6; font-family: Arial, sans-serif; }
+        .header-title { background-color: #003366; color: white; padding: 15px; text-align: center; border-radius: 5px; }
+        .contact-btn { font-size: 14px; margin-left: 5px; }
+        .person-card { display: flex; justify-content: space-between; align-items: center; padding: 10px; border: 1px solid #ddd; border-radius: 5px; background-color: #fff; margin-bottom: 5px; }
+    </style>
+</head>
+<body>
+<div class="container mt-3">
+    <h4 class="header-title">SIR नियंत्रण कक्ष, वाशिम</h4>
+    
+    <div class="text-end mb-3">
+        <a href="entry.html" class="btn btn-warning fw-bold">📝 BLO डेटा एंट्री (लॉगिन)</a>
+    </div>
+
+    <div class="card border-primary mb-3">
+        <div class="card-header bg-primary text-white font-weight-bold">AERO (नियंत्रक)</div>
+        <div class="card-body person-card">
+            <div><strong>अभिजित वि. देवगीरकर</strong><br><small>AERO, वाशिम</small></div>
+            <div>
+                <a href="tel:+910000000000" class="btn btn-sm btn-success contact-btn">📞</a>
+                <a href="https://wa.me/910000000000" class="btn btn-sm btn-outline-success contact-btn">💬</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="accordion" id="hierarchyAccordion">
+        <div class="accordion-item">
+            <h2 class="accordion-header"><button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseNodal"><strong>नोडल अधिकारी</strong></button></h2>
+            <div id="collapseNodal" class="accordion-collapse collapse show" data-bs-parent="#hierarchyAccordion">
+                <div class="accordion-body" id="nodalContainer">लोड होत आहे...</div>
+            </div>
+        </div>
+
+        <div class="accordion-item">
+            <h2 class="accordion-header"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseAssistants"><strong>कार्यालयीन सहाय्यक</strong></button></h2>
+            <div id="collapseAssistants" class="accordion-collapse collapse" data-bs-parent="#hierarchyAccordion">
+                <div class="accordion-body" id="assistantContainer">लोड होत आहे...</div>
+            </div>
+        </div>
+
+        <div class="accordion-item">
+            <h2 class="accordion-header"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSupervisors"><strong>पर्यवेक्षक व BLO टीम</strong></button></h2>
+            <div id="collapseSupervisors" class="accordion-collapse collapse" data-bs-parent="#hierarchyAccordion">
+                <div class="accordion-body p-2" id="supervisorsContainer">लोड होत आहे...</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    // तुमची URL खालील सिंगल कोट (' ') मध्ये टाका.
+    const scriptURL = 'https://script.google.com/macros/s/AKfycbyp8OWRFBts_lfMSK4VdK0k6OSn7eyBTu0tu9XEjCpgIWevzvuE24mv54VJKm2tk2B7cQ/exec';
+
+    document.addEventListener("DOMContentLoaded", function() {
+        fetch(scriptURL)
+            .then(response => response.json())
+            .then(data => renderHierarchy(data))
+            .catch(error => alert('डेटा लोड करताना त्रुटी आली!'));
+    });
+
+    function renderHierarchy(contacts) {
+        // नोडल अधिकारी
+        const nodalContainer = document.getElementById("nodalContainer");
+        nodalContainer.innerHTML = "";
+        contacts.filter(c => c.Role === "Nodal Officer").forEach(n => {
+            nodalContainer.innerHTML += createCardHTML(n.Name, "नोडल अधिकारी", n.Mobile_No);
+        });
+
+        // कार्यालयीन सहाय्यक
+        const assistantContainer = document.getElementById("assistantContainer");
+        assistantContainer.innerHTML = "";
+        contacts.filter(c => c.Role === "Office Assistant").forEach(a => {
+            assistantContainer.innerHTML += createCardHTML(a.Name, "कार्यालयीन कामकाज", a.Mobile_No);
+        });
+
+        // पर्यवेक्षक व BLO
+        const supervisorsContainer = document.getElementById("supervisorsContainer");
+        supervisorsContainer.innerHTML = "";
+        contacts.filter(c => c.Role === "Supervisor").forEach((sup, index) => {
+            let blosHTML = "";
+            contacts.filter(c => c.Role === "BLO" && c.Reports_To_ID === sup.ID).forEach(blo => {
+                let astsHTML = "";
+                contacts.filter(c => c.Role === "Assistant" && c.Reports_To_ID === blo.ID).forEach(ast => {
+                    astsHTML += `<div class="d-flex justify-content-between mt-1 px-2"><span>${ast.Name} (सहा.)</span><a href="tel:${ast.Mobile_No}" class="btn btn-sm btn-outline-secondary contact-btn">📞</a></div>`;
+                });
+                blosHTML += `<div class="border p-2 mb-2 rounded bg-white"><div class="d-flex justify-content-between align-items-center"><div><strong>${blo.Name}</strong><br><small class="text-muted">${blo.Ward_Area}</small></div><a href="tel:${blo.Mobile_No}" class="btn btn-sm btn-success contact-btn">📞</a></div><hr class="my-1"><small class="text-muted">सहाय्यक टीम:</small>${astsHTML}</div>`;
+            });
+
+            supervisorsContainer.innerHTML += `
+                <div class="accordion mb-2" id="supAccordion_${index}">
+                    <div class="accordion-item"><h2 class="accordion-header"><button class="accordion-button collapsed bg-light" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSup_${index}">पर्यवेक्षक: <strong>${sup.Name}</strong></button></h2>
+                    <div id="collapseSup_${index}" class="accordion-collapse collapse" data-bs-parent="#supAccordion_${index}"><div class="accordion-body p-2"><div class="text-end mb-2"><a href="tel:${sup.Mobile_No}" class="btn btn-sm btn-success">📞 Call</a> <a href="https://wa.me/${sup.Mobile_No}" class="btn btn-sm btn-outline-success">💬 WA</a></div>${blosHTML}</div></div></div>
+                </div>`;
+        });
+    }
+
+    function createCardHTML(name, subtext, mobile) {
+        return `<div class="person-card"><div><strong>${name}</strong><br><small>${subtext}</small></div><div><a href="tel:${mobile}" class="btn btn-sm btn-success contact-btn">📞</a> <a href="https://wa.me/${mobile}" class="btn btn-sm btn-outline-success contact-btn">💬</a></div></div>`;
+    }
+</script>
+</body>
+</html>
