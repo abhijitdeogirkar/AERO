@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="mr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BLO डेटा एंट्री - SIR वाशिम</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body { background-color: #f4f7f6; font-family: Arial, sans-serif; }
+        .header-title { background-color: #003366; color: white; padding: 15px; text-align: center; border-radius: 5px; }
+        .card-container { max-width: 500px; margin: 0 auto; margin-top: 20px; }
+        #loader { display: none; text-align: center; margin-top: 10px; color: #003366; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+<div class="container card-container">
+    <h4 class="header-title">BLO डेटा एंट्री (SIR वाशिम)</h4>
+    
+    <div class="text-start mb-3 mt-2">
+        <a href="index.html" class="btn btn-sm btn-secondary">⬅ डॅशबोर्डवर परत जा</a>
+    </div>
+
+    <div id="loader">कृपया प्रतीक्षा करा... प्रकिया सुरू आहे ⏳</div>
+
+    <div class="card shadow-sm mb-3" id="loginSection">
+        <div class="card-body">
+            <h5 class="card-title text-center mb-4">लॉगिन करा</h5>
+            <div class="mb-3">
+                <label class="form-label">मोबाईल नंबर (Username)</label>
+                <input type="number" id="loginMobile" class="form-control" placeholder="उदा. 9876543210">
+            </div>
+            <div class="mb-3">
+                <label class="form-label">पासवर्ड</label>
+                <input type="password" id="loginPassword" class="form-control" placeholder="पासवर्ड टाका">
+            </div>
+            <button class="btn btn-primary w-100 fw-bold" onclick="doLogin()">लॉगिन</button>
+        </div>
+    </div>
+
+    <div class="card shadow-sm mb-3" id="passwordChangeSection" style="display: none;">
+        <div class="card-body">
+            <h5 class="card-title text-center text-danger mb-4">नवीन पासवर्ड सेट करा</h5>
+            <p class="text-muted text-center text-sm">तुमची माहिती सुरक्षित ठेवण्यासाठी कृपया नवीन पासवर्ड सेट करा.</p>
+            <div class="mb-3">
+                <label class="form-label">नवीन पासवर्ड</label>
+                <input type="text" id="newPassword" class="form-control" placeholder="नवीन पासवर्ड टाका">
+            </div>
+            <button class="btn btn-danger w-100 fw-bold" onclick="changePassword()">सेव्ह करा व पुढे जा</button>
+        </div>
+    </div>
+
+    <div class="card shadow-sm mb-3" id="entrySection" style="display: none;">
+        <div class="card-body">
+            <div class="alert alert-info py-2 text-center">
+                <strong>स्वागत आहे, <span id="displayBloName"></span>!</strong><br>
+                <small><span id="displayWard"></span></small>
+            </div>
+            <h5 class="card-title text-center mb-3">आजचा अहवाल</h5>
+            
+            <div class="mb-3">
+                <label class="form-label">आज वाटलेले एकूण फॉर्म्स</label>
+                <input type="number" id="formsDistributed" class="form-control" placeholder="आकडा टाका">
+            </div>
+            <div class="mb-3">
+                <label class="form-label">आज परत कलेक्ट केलेले फॉर्म्स</label>
+                <input type="number" id="formsCollected" class="form-control" placeholder="आकडा टाका">
+            </div>
+            <button class="btn btn-success w-100 fw-bold" onclick="submitReport()">अहवाल सबमिट करा</button>
+            <button class="btn btn-outline-danger w-100 mt-2" onclick="logout()">लॉग आऊट</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    // तुमची URL खालील सिंगल कोट (' ') मध्ये टाका.
+    const scriptURL = 'https://script.google.com/macros/s/AKfycbyp8OWRFBts_lfMSK4VdK0k6OSn7eyBTu0tu9XEjCpgIWevzvuE24mv54VJKm2tk2B7cQ/exec';
+    
+    // युझरचा तात्पुरता डेटा
+    let currentUser = { mobile: "", name: "", ward: "" };
+
+    function showLoader(show) {
+        document.getElementById("loader").style.display = show ? "block" : "none";
+    }
+
+    // १. लॉगिन फंक्शन
+    function doLogin() {
+        const mobile = document.getElementById("loginMobile").value;
+        const password = document.getElementById("loginPassword").value;
+        
+        if (!mobile || !password) { alert("मोबाईल नंबर आणि पासवर्ड भरणे आवश्यक आहे."); return; }
+        
+        showLoader(true);
+        fetch(scriptURL, {
+            method: 'POST',
+            body: JSON.stringify({ action: "login", username: mobile, password: password })
+        })
+        .then(response => response.json())
+        .then(data => {
+            showLoader(false);
+            if (data.status === "success") {
+                currentUser.mobile = mobile;
+                currentUser.name = data.name;
+                currentUser.ward = data.ward;
+                
+                document.getElementById("loginSection").style.display = "none";
+                
+                // जर पहिल्यांदाच लॉगिन करत असेल (TRUE)
+                if (data.is_first_login === true || data.is_first_login === "TRUE") {
+                    document.getElementById("passwordChangeSection").style.display = "block";
+                } else {
+                    showEntryForm();
+                }
+            } else {
+                alert("लॉगिन अयशस्वी: " + data.message);
+            }
+        })
+        .catch(error => { showLoader(false); alert("नेटवर्क एरर. पुन्हा प्रयत्न करा."); });
+    }
+
+    // २. पासवर्ड बदलण्याचे फंक्शन
+    function changePassword() {
+        const newPassword = document.getElementById("newPassword").value;
+        if (!newPassword) { alert("कृपया नवीन पासवर्ड टाका."); return; }
+        
+        showLoader(true);
+        fetch(scriptURL, {
+            method: 'POST',
+            body: JSON.stringify({ action: "change_password", username: currentUser.mobile, new_password: newPassword })
+        })
+        .then(response => response.json())
+        .then(data => {
+            showLoader(false);
+            if (data.status === "success") {
+                alert("पासवर्ड यशस्वीरित्या बदलला. आता तुम्ही माहिती भरू शकता.");
+                document.getElementById("passwordChangeSection").style.display = "none";
+                showEntryForm();
+            } else {
+                alert("एरर: " + data.message);
+            }
+        });
+    }
+
+    // ३. फॉर्म दाखवणे
+    function showEntryForm() {
+        document.getElementById("entrySection").style.display = "block";
+        document.getElementById("displayBloName").innerText = currentUser.name;
+        document.getElementById("displayWard").innerText = currentUser.ward;
+    }
+
+    // ४. अहवाल सबमिट करणे
+    function submitReport() {
+        const dist = document.getElementById("formsDistributed").value;
+        const coll = document.getElementById("formsCollected").value;
+        
+        if (!dist || !coll) { alert("कृपया वाटलेले आणि कलेक्ट केलेले फॉर्म्सची संख्या टाका."); return; }
+        
+        showLoader(true);
+        fetch(scriptURL, {
+            method: 'POST',
+            body: JSON.stringify({ 
+                action: "submit_report", 
+                username: currentUser.mobile, 
+                name: currentUser.name, 
+                ward: currentUser.ward, 
+                forms_distributed: dist, 
+                forms_collected: coll 
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            showLoader(false);
+            if (data.status === "success") {
+                alert("आजचा अहवाल यशस्वीरित्या सेव्ह झाला! धन्यवाद.");
+                // फॉर्म रिकामा करणे
+                document.getElementById("formsDistributed").value = "";
+                document.getElementById("formsCollected").value = "";
+            } else {
+                alert("अहवाल सेव्ह करताना त्रुटी आली.");
+            }
+        });
+    }
+
+    function logout() {
+        currentUser = { mobile: "", name: "", ward: "" };
+        document.getElementById("entrySection").style.display = "none";
+        document.getElementById("loginSection").style.display = "block";
+        document.getElementById("loginMobile").value = "";
+        document.getElementById("loginPassword").value = "";
+    }
+</script>
+</body>
+</html>
