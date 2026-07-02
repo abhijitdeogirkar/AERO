@@ -20,16 +20,7 @@
         <a href="entry.html" class="btn btn-warning fw-bold">📝 BLO डेटा एंट्री (लॉगिन)</a>
     </div>
 
-    <div class="card border-primary mb-3">
-        <div class="card-header bg-primary text-white font-weight-bold">AERO (नियंत्रक)</div>
-        <div class="card-body person-card">
-            <div><strong>अभिजित वि. देवगीरकर</strong><br><small>AERO, वाशिम</small></div>
-            <div>
-                <a href="tel:+910000000000" class="btn btn-sm btn-success contact-btn">📞</a>
-                <a href="https://wa.me/910000000000" class="btn btn-sm btn-outline-success contact-btn">💬</a>
-            </div>
-        </div>
-    </div>
+    <div id="aeroContainer"></div>
 
     <div class="accordion" id="hierarchyAccordion">
         <div class="accordion-item">
@@ -57,7 +48,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script>
-    // तुमची URL खालील सिंगल कोट (' ') मध्ये टाका.
+    // तुमची Google Apps Script URL
     const scriptURL = 'https://script.google.com/macros/s/AKfycbyp8OWRFBts_lfMSK4VdK0k6OSn7eyBTu0tu9XEjCpgIWevzvuE24mv54VJKm2tk2B7cQ/exec';
 
     document.addEventListener("DOMContentLoaded", function() {
@@ -68,21 +59,38 @@
     });
 
     function renderHierarchy(contacts) {
-        // नोडल अधिकारी
+        // १. AERO (नियंत्रक) डायनॅमिक लोड करणे
+        const aeroContainer = document.getElementById("aeroContainer");
+        aeroContainer.innerHTML = "";
+        contacts.filter(c => c.Role === "AERO").forEach(aero => {
+            aeroContainer.innerHTML += `
+            <div class="card border-primary mb-3">
+                <div class="card-header bg-primary text-white font-weight-bold">${aero.Role} (नियंत्रक)</div>
+                <div class="card-body person-card">
+                    <div><strong>${aero.Name}</strong><br><small>${aero.Role}, ${aero.Ward_Area}</small></div>
+                    <div>
+                        <a href="tel:${aero.Mobile_No}" class="btn btn-sm btn-success contact-btn">📞</a>
+                        <a href="https://wa.me/${aero.Mobile_No}" class="btn btn-sm btn-outline-success contact-btn">💬</a>
+                    </div>
+                </div>
+            </div>`;
+        });
+
+        // २. नोडल अधिकारी
         const nodalContainer = document.getElementById("nodalContainer");
         nodalContainer.innerHTML = "";
         contacts.filter(c => c.Role === "Nodal Officer").forEach(n => {
             nodalContainer.innerHTML += createCardHTML(n.Name, "नोडल अधिकारी", n.Mobile_No);
         });
 
-        // कार्यालयीन सहाय्यक
+        // ३. कार्यालयीन सहाय्यक
         const assistantContainer = document.getElementById("assistantContainer");
         assistantContainer.innerHTML = "";
         contacts.filter(c => c.Role === "Office Assistant").forEach(a => {
             assistantContainer.innerHTML += createCardHTML(a.Name, "कार्यालयीन कामकाज", a.Mobile_No);
         });
 
-        // पर्यवेक्षक व BLO
+        // ४. पर्यवेक्षक व BLO
         const supervisorsContainer = document.getElementById("supervisorsContainer");
         supervisorsContainer.innerHTML = "";
         contacts.filter(c => c.Role === "Supervisor").forEach((sup, index) => {
@@ -92,7 +100,7 @@
                 contacts.filter(c => c.Role === "Assistant" && c.Reports_To_ID === blo.ID).forEach(ast => {
                     astsHTML += `<div class="d-flex justify-content-between mt-1 px-2"><span>${ast.Name} (सहा.)</span><a href="tel:${ast.Mobile_No}" class="btn btn-sm btn-outline-secondary contact-btn">📞</a></div>`;
                 });
-                blosHTML += `<div class="border p-2 mb-2 rounded bg-white"><div class="d-flex justify-content-between align-items-center"><div><strong>${blo.Name}</strong><br><small class="text-muted">${blo.Ward_Area}</small></div><a href="tel:${blo.Mobile_No}" class="btn btn-sm btn-success contact-btn">📞</a></div><hr class="my-1"><small class="text-muted">सहाय्यक टीम:</small>${astsHTML}</div>`;
+                blosHTML += `<div class="border p-2 mb-2 rounded bg-white"><div class="d-flex justify-content-between align-items-center"><div><strong>${blo.Name}</strong><br><small class="text-muted">प्रभाग/भाग: ${blo.Ward_Area}</small></div><a href="tel:${blo.Mobile_No}" class="btn btn-sm btn-success contact-btn">📞</a></div><hr class="my-1"><small class="text-muted">सहाय्यक टीम:</small>${astsHTML}</div>`;
             });
 
             supervisorsContainer.innerHTML += `
