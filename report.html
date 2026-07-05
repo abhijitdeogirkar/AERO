@@ -14,53 +14,45 @@
     <style>
         body { background-color: #f4f7f6; font-family: 'Arial Unicode MS', Mangal, Arial, sans-serif; }
         
-        .table-wrapper { overflow-x: auto; background: white; padding: 10px; }
+        .table-wrapper { overflow-x: auto; background: white; padding: 10px; margin-bottom: 20px;}
         
-        table { width: 100%; table-layout: auto; font-size: 11px; border-collapse: collapse; margin-bottom: 20px; }
+        /* कॉम्पॅक्ट टेबल सेटिंग्ज */
+        table { width: 100%; table-layout: fixed; font-size: 9px; border-collapse: collapse; margin-bottom: 15px; background-color: white; }
         
         th, td { 
-            padding: 5px !important; 
+            padding: 3px !important; /* पॅडिंग कमी करून जागा वाचवली */
             text-align: center; 
             vertical-align: middle; 
             white-space: normal; 
             word-wrap: break-word; 
-            border: 1px solid #555; 
+            border: 1px solid #444; 
+            line-height: 1.1;
         }
         
-        th { background-color: #003366 !important; color: white !important; }
+        /* कॉलमच्या हेडर्सचा रंग */
+        .col-header th { background-color: #003366 !important; color: white !important; font-size: 10px; }
         
         .subtotal-row { background-color: #e9ecef !important; font-weight: bold; }
-        .grandtotal-row { background-color: #ffc107 !important; color: black !important; font-weight: bold; font-size: 12px; border-top: 2px solid #000; }
+        .grandtotal-row { background-color: #ffc107 !important; color: black !important; font-weight: bold; font-size: 11px; border-top: 2px solid #000; }
         
-        #pdfContent { display: none; padding: 10px; }
-        
-        .print-header { text-align: center; margin-bottom: 10px; color: #003366; }
-        .print-header h3 { margin: 0; padding: 0; font-weight: bold; font-size: 18px; }
-        .print-header p { margin: 5px 0 0 0; font-size: 12px; font-weight: bold; color: #333; }
+        #pdfContent { display: none; padding: 0; }
         
         /* =========================================
-           PRINT & PDF CSS (फक्त PDF बनवताना लागू होईल)
+           PRINT & PDF CSS (कॉम्पॅक्ट आणि परफेक्ट पेज ब्रेक)
            ========================================= */
         @media print {
-            /* PDF मध्ये मेनू आणि अपलोड बटण लपवणे */
-            nav, .upload-section, #downloadPdfBtn, h4.text-primary { display: none !important; }
-            
-            /* पांढरा रंग आणि मार्जिन सेट करणे */
+            nav, .upload-section { display: none !important; }
             body { background-color: white !important; margin: 0; padding: 0; }
             .table-wrapper { border: none !important; box-shadow: none !important; padding: 0; }
             
-            /* A4 Landscape सेटिंग */
-            @page { size: A4 landscape; margin: 10mm; }
+            /* A4 Landscape आणि अत्यंत कमी मार्जिन */
+            @page { size: A4 landscape; margin: 5mm; }
             
-            /* रंगीत बॅकग्राउंड PDF मध्ये येण्यासाठी */
             * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
             
-            /* प्रत्येक पानावर टेबल हेडर रिपीट होण्यासाठी */
+            /* प्रत्येक पानावर टेबल हेडर (टायटलसह) रिपीट होण्यासाठी */
             thead { display: table-header-group; }
             tr { page-break-inside: avoid; }
-            
-            /* पेज ब्रेक: प्रत्येक सुपरवायझर नवीन पानावर जाण्यासाठी */
-            .page-break { page-break-before: always; clear: both; }
         }
     </style>
 </head>
@@ -84,7 +76,7 @@
 </nav>
 
 <div class="container-fluid mt-4">
-    <h4 class="text-center text-primary fw-bold mb-4">BLO प्रगती अहवाल जनरेटर</h4>
+    <h4 class="text-center text-primary fw-bold mb-4 upload-section">BLO प्रगती अहवाल जनरेटर</h4>
     
     <!-- फाईल अपलोड सेक्शन -->
     <div class="row justify-content-center mb-4 upload-section">
@@ -93,7 +85,7 @@
                 <label class="form-label fw-bold">ECI ची Excel फाईल अपलोड करा:</label>
                 <input type="file" id="excelUpload" class="form-control mb-3" accept=".xlsx, .xls, .csv">
                 
-                <div id="loadingMsg" class="text-warning fw-bold mt-2" style="display:none;">⏳ डेटा मॅच आणि कॅल्क्युलेट करत आहे...</div>
+                <div id="loadingMsg" class="text-warning fw-bold mt-2" style="display:none;">⏳ डेटा मॅच करत आहे...</div>
                 
                 <button id="downloadPdfBtn" class="btn btn-danger fw-bold w-100" style="display:none;" onclick="downloadPDF()">
                     📄 PDF डाऊनलोड करा (Save as PDF)
@@ -103,7 +95,7 @@
     </div>
 
     <!-- रिपोर्ट दाखवण्यासाठी मुख्य कंटेनर -->
-    <div class="mt-4 shadow-sm table-wrapper border" id="pdfContent"></div>
+    <div class="table-wrapper" id="pdfContent"></div>
 </div>
 
 <script>
@@ -151,11 +143,20 @@
         pdfContainer.innerHTML = ""; 
 
         const headers = [
-            "Sr. No", "Name of Supervisor", "Name of BLO", "Part Number", 
-            "Total Elector", "Total EFs Distributed", "Total EFs Digitized", 
-            "EFs Submitted (Not verified)", "EFs Verified by BLO", "Mapped as Progeny", 
-            "Mapped as Self", "No Mapping", "UEF Death", "UEF Permanent Shifting", 
-            "UEF Already Enrolled", "UEF Absent", "UEF Others", "Total UEF"
+            "Sr", "Supervisor", "Name of BLO", "Part", 
+            "Total Elector", "EFs Distri- buted", "EFs Digi- tized", 
+            "Submit (Not Veri)", "Verified by BLO", "Mapped Progeny", 
+            "Mapped as Self", "No Mapping", "UEF Death", "UEF Perm. Shift", 
+            "Already Enrolled", "UEF Absent", "UEF Others", "Total UEF"
+        ];
+
+        // कॉलम रुंदीचे अचूक नियोजन (Total 100%)
+        const colWidths = [
+            "3%",  // Sr
+            "8%",  // Supervisor
+            "13%", // Name of BLO
+            "4%",  // Part No
+            "5.1%","5.1%","5.1%","5.1%","5.1%","5.1%","5.1%","5.1%","5.1%","5.1%","5.1%","5.1%","5.1%","5.1%" // 14 Cols = ~72%
         ];
 
         const numericKeys = [
@@ -196,35 +197,42 @@
         let srNo = 1;
         let finalHtml = "";
 
+        // प्रत्येक सुपरवायझरसाठी स्वतंत्र टेबल (Page break सह)
         supervisorNames.forEach((sup, index) => {
             let supRows = groupedData[sup];
             let supTotals = Array(numericKeys.length).fill(0);
             
-            // फक्त पहिल्या पेजला सोडून बाकी सर्व पेजेसच्या आधी 'page-break' लावणे
-            if (index > 0) {
-                finalHtml += `<div class="page-break"></div>`;
-            }
+            // दुसऱ्या सुपरवायझरपासून पेज ब्रेक लावणे
+            let pageBreakStyle = index > 0 ? 'page-break-before: always;' : '';
             
+            finalHtml += `<table style="${pageBreakStyle}">`;
+            
+            // THEAD: यामध्ये मुख्य हेडिंग आणि कॉलम्स दिले आहेत, जेणेकरून ते प्रत्येक पानावर रिपीट होतील
+            finalHtml += `<thead>`;
             finalHtml += `
-            <div class="print-header">
-                <h3>BLO प्रगती अहवाल (AERO श्री अभिजीत देवगिरकर)</h3>
-                <p>${reportDateStr}</p>
-                <hr style="border: 1px solid #003366; margin-top: 10px; margin-bottom: 10px;">
-            </div>`;
-            
-            finalHtml += `<table><thead><tr>`;
-            headers.forEach(h => finalHtml += `<th>${h}</th>`);
+                <tr>
+                    <th colspan="18" style="background-color: white !important; color: #003366 !important; border: none; padding-bottom: 8px !important;">
+                        <h3 style="margin: 0; font-size: 16px; font-weight: bold;">BLO प्रगती अहवाल (AERO श्री अभिजीत देवगिरकर)</h3>
+                        <p style="margin: 3px 0 0 0; font-size: 11px; color: #333 !important;">${reportDateStr}</p>
+                    </th>
+                </tr>
+                <tr class="col-header">`;
+            headers.forEach((h, i) => {
+                finalHtml += `<th style="width: ${colWidths[i]};">${h}</th>`;
+            });
             finalHtml += `</tr></thead><tbody>`;
 
+            // डेटा भरणे
             supRows.forEach((item, rowIndex) => {
                 finalHtml += `<tr>`;
                 finalHtml += `<td>${srNo++}</td>`;
                 
+                // सुपरवायझरचे नाव मर्ज करणे
                 if (rowIndex === 0) {
-                    finalHtml += `<td rowspan="${supRows.length}" style="vertical-align: middle; background-color: #fdfdfd;"><b>${item.supName}</b></td>`;
+                    finalHtml += `<td rowspan="${supRows.length}" style="background-color: #fcfcfc;"><b>${item.supName}</b></td>`;
                 }
                 
-                finalHtml += `<td>${item.bloName}</td>`;
+                finalHtml += `<td style="text-align: left;">${item.bloName}</td>`;
                 finalHtml += `<td>${item.partNo}</td>`;
                 
                 numericKeys.forEach((key, kIndex) => {
@@ -236,12 +244,13 @@
                 finalHtml += `</tr>`;
             });
 
+            // सुपरवायझरची बेरीज
             finalHtml += `<tr class="subtotal-row">`;
             finalHtml += `<td colspan="3" style="text-align:right;">${sup} (एकूण)</td>`;
             supTotals.forEach(val => finalHtml += `<td>${val}</td>`);
             finalHtml += `</tr>`;
 
-            // शेवटच्या सुपरवायझरच्या खाली ग्रँड टोटल
+            // सर्वात शेवटी ग्रँड टोटल ऍड करणे
             if (index === supervisorNames.length - 1) {
                 finalHtml += `<tr class="grandtotal-row">`;
                 finalHtml += `<td colspan="4" style="text-align:right;">सर्व सुपरवायझर (एकंदर बेरीज)</td>`;
@@ -259,9 +268,8 @@
         document.getElementById('downloadPdfBtn').style.display = 'block';
     }
 
-    // ५. नवीन आणि परिपूर्ण PDF डाऊनलोड पद्धत (Native Print)
+    // PDF बनवण्याची मूळ पद्धत
     function downloadPDF() {
-        // प्रिंट डायलॉग उघडेल, जिथे युझर थेट 'Save as PDF' निवडू शकतो.
         window.print();
     }
 </script>
