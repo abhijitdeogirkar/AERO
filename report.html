@@ -10,11 +10,42 @@
     
     <style>
         body { background-color: #f4f7f6; font-family: Arial, sans-serif; }
-        .table-wrapper { overflow-x: auto; max-height: 600px; }
-        th { background-color: #003366 !important; color: white !important; font-size: 12px; white-space: nowrap; position: sticky; top: 0; z-index: 1;}
-        td { font-size: 12px; white-space: nowrap; }
-        #pdfContent { background: white; padding: 20px; }
-        .print-header { display: none; text-align: center; margin-bottom: 20px; color: #003366; }
+        
+        /* टेबलला PDF मध्ये व्यवस्थित बसवण्यासाठी CSS */
+        .table-wrapper { overflow-x: auto; background: white; padding: 10px; }
+        
+        /* A4 पेजवर बसवण्यासाठी फॉन्ट लहान आणि रॅपिंग */
+        table { width: 100%; table-layout: auto; font-size: 10px; border-collapse: collapse; }
+        
+        /* PDF मध्ये प्रत्येक पानावर हेडर रिपीट होण्यासाठी */
+        thead { display: table-header-group; }
+        tfoot { display: table-footer-group; }
+        tr { page-break-inside: avoid; } /* ओळ अर्धी कट होऊ नये म्हणून */
+        
+        th, td { 
+            padding: 4px !important; 
+            text-align: center; 
+            vertical-align: middle; 
+            white-space: normal; /* रॅपिंग चालू करण्यासाठी */
+            word-wrap: break-word; 
+            border: 1px solid #ddd;
+        }
+        
+        /* प्रिंट करताना बॅकग्राउंड कलर यावा यासाठी */
+        th { 
+            background-color: #003366 !important; 
+            color: white !important; 
+            -webkit-print-color-adjust: exact; 
+            print-color-adjust: exact;
+        }
+        
+        .subtotal-row { background-color: #e9ecef !important; font-weight: bold; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+        .grandtotal-row { background-color: #ffc107 !important; color: black !important; font-weight: bold; font-size: 11px; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+        
+        #pdfContent { display: none; padding: 10px; }
+        .print-header { display: none; text-align: center; margin-bottom: 15px; color: #003366; }
+        .print-header h3 { margin: 0; padding: 0; font-weight: bold; }
+        .print-header p { margin: 5px 0 0 0; font-size: 12px; font-weight: bold; color: #333; }
     </style>
 </head>
 <body>
@@ -40,63 +71,54 @@
     
     <div class="row justify-content-center">
         <div class="col-md-6">
-            <div class="card p-4 shadow-sm border-primary">
-                <label class="form-label fw-bold">१. ECI ची Excel फाईल अपलोड करा:</label>
-                <input type="file" id="excelUpload" class="form-control" accept=".xlsx, .xls, .csv">
+            <div class="card p-4 shadow-sm border-primary text-center">
+                <label class="form-label fw-bold">ECI ची Excel फाईल अपलोड करा:</label>
+                <input type="file" id="excelUpload" class="form-control mb-3" accept=".xlsx, .xls, .csv">
                 
-                <div id="loadingMsg" class="text-warning fw-bold mt-2" style="display:none;">⏳ डेटा मॅच करत आहे, कृपया प्रतीक्षा करा...</div>
+                <div id="loadingMsg" class="text-warning fw-bold mt-2" style="display:none;">⏳ डेटा मॅच आणि कॅल्क्युलेट करत आहे...</div>
                 
-                <button id="downloadPdfBtn" class="btn btn-danger mt-3 fw-bold w-100" style="display:none;" onclick="downloadPDF()">
-                    📄 हा रिपोर्ट PDF मध्ये डाऊनलोड करा
+                <button id="downloadPdfBtn" class="btn btn-danger fw-bold w-100" style="display:none;" onclick="downloadPDF()">
+                    📄 PDF डाऊनलोड करा (A4 Landscape)
                 </button>
             </div>
         </div>
     </div>
 
-    <div class="mt-4 shadow-sm table-wrapper border" id="pdfContent" style="display: none;">
+    <div class="mt-4 shadow-sm table-wrapper border" id="pdfContent">
         <div class="print-header">
-            <h2>BLO प्रगती अहवाल (SIR नियंत्रण कक्ष, वाशिम)</h2>
-            <hr>
+            <h3>BLO प्रगती अहवाल (श्री अभिजीत देवगिरकर)</h3>
+            <p id="reportDateTime"></p>
+            <hr style="border: 1px solid #003366; margin-top: 10px;">
         </div>
-        <table class="table table-bordered table-hover table-sm" id="reportTable">
-            <thead id="reportHead">
-                </thead>
-            <tbody id="reportBody">
-                </tbody>
+        
+        <table id="reportTable">
+            <thead id="reportHead"></thead>
+            <tbody id="reportBody"></tbody>
         </table>
     </div>
 </div>
 
 <script>
-    // तुमची Google Apps Script URL
     const scriptURL = 'https://script.google.com/macros/s/AKfycbyp8OWRFBts_lfMSK4VdK0k6OSn7eyBTu0tu9XEjCpgIWevzvuE24mv54VJKm2tk2B7cQ/exec';
-    
-    let bloMapping = {}; // पार्ट नंबर नुसार BLO आणि Supervisor चा डेटा साठवण्यासाठी
+    let bloMapping = {}; 
 
-    // १. पेज लोड होताच Google Sheet मधून Hierarchy डेटा आणणे
+    // १. Hierarchy डेटा आणणे
     document.addEventListener("DOMContentLoaded", function() {
         fetch(scriptURL)
             .then(response => response.json())
             .then(data => buildMapping(data))
-            .catch(error => alert('Hierarchy डेटा लोड करताना त्रुटी आली! इंटरनेट तपासा.'));
+            .catch(error => alert('Hierarchy डेटा लोड करताना त्रुटी आली!'));
     });
 
-    // २. पार्ट नंबर (Ward_Area) नुसार डिक्शनरी बनवणे
     function buildMapping(contacts) {
         contacts.filter(c => c.Role === "BLO").forEach(blo => {
-            // BLO चा Supervisor शोधणे
             let supervisor = contacts.find(c => c.ID === blo.Reports_To_ID);
             let partNo = String(blo.Ward_Area).trim();
-            
-            bloMapping[partNo] = {
-                bloName: blo.Name,
-                supName: supervisor ? supervisor.Name : "N/A"
-            };
+            bloMapping[partNo] = { bloName: blo.Name, supName: supervisor ? supervisor.Name : "N/A" };
         });
-        console.log("Mapping Ready:", bloMapping);
     }
 
-    // ३. Excel फाईल अपलोड केल्यावर वाचणे
+    // २. Excel फाईल वाचणे
     document.getElementById('excelUpload').addEventListener('change', function(e) {
         const file = e.target.files[0];
         if (!file) return;
@@ -108,100 +130,143 @@
             const data = new Uint8Array(event.target.result);
             const workbook = XLSX.read(data, {type: 'array'});
             const firstSheetName = workbook.SheetNames[0];
-            const worksheet = workbook.Sheets[firstSheetName];
-            
-            // Excel चा डेटा JSON मध्ये कन्व्हर्ट करणे
-            const excelJson = XLSX.utils.sheet_to_json(worksheet);
+            const excelJson = XLSX.utils.sheet_to_json(workbook.Sheets[firstSheetName]);
             generateReport(excelJson);
         };
         reader.readAsArrayBuffer(file);
     });
 
-    // ४. रिपोर्ट जनरेट करून HTML टेबलमध्ये टाकणे
+    // ३. रिपोर्ट बनवणे (सॉर्टिंग आणि टोटल्स सह)
     function generateReport(excelData) {
         const tHead = document.getElementById('reportHead');
         const tBody = document.getElementById('reportBody');
-        tHead.innerHTML = "";
-        tBody.innerHTML = "";
+        tHead.innerHTML = ""; tBody.innerHTML = "";
 
-        // कॉलम्सची नावे
+        // नवीन हेडर्स (Asmbly Name काढला, Sr. No टाकला)
         const headers = [
-            "Asmbly Name", "Name of Supervisor", "Name of BLO", "Part Number", 
+            "Sr. No", "Name of Supervisor", "Name of BLO", "Part Number", 
             "Total Elector", "Total EFs Distributed", "Total EFs Digitized", 
-            "EFs Submitted by Elector", "EFs Verified by BLO", "Mapped as Progeny", 
+            "EFs Submitted (Not verified)", "EFs Verified by BLO", "Mapped as Progeny", 
             "Mapped as Self", "No Mapping", "UEF Death", "UEF Permanent Shifting", 
             "UEF Already Enrolled", "UEF Absent", "UEF Others", "Total UEF", "EF Parts Downloaded"
         ];
 
-        // टेबलचे हेडर बनवणे
         let trHead = "<tr>";
         headers.forEach(h => trHead += `<th>${h}</th>`);
         trHead += "</tr>";
         tHead.innerHTML = trHead;
 
-        let matchCount = 0;
-
-        // Excel च्या प्रत्येक रांगेसाठी
+        // डेटा फिल्टर आणि मॅप करणे
+        let matchedRows = [];
         excelData.forEach(row => {
             let partNo = String(row["Part Number"]).trim();
-            
-            // जर हा पार्ट नंबर आपल्या डिक्शनरीमध्ये (Google Sheet मध्ये) असेल, तरच घ्या
             if (bloMapping[partNo]) {
-                matchCount++;
-                let supName = bloMapping[partNo].supName;
-                let bloName = bloMapping[partNo].bloName;
-
-                let tr = "<tr>";
-                tr += `<td>${row["Asmbly Name"] || ""}</td>`;
-                tr += `<td><b>${supName}</b></td>`;
-                tr += `<td><b>${bloName}</b></td>`;
-                tr += `<td>${partNo}</td>`;
-                tr += `<td>${row["Total Elector"] || 0}</td>`;
-                tr += `<td>${row["Total EFs Distributed"] || 0}</td>`;
-                tr += `<td>${row["Total EFs Digitized"] || 0}</td>`;
-                tr += `<td>${row["EFs Submitted by Elector ( Not verified by BLO)"] || 0}</td>`;
-                tr += `<td>${row["EFs Verified by BLO"] || 0}</td>`;
-                tr += `<td>${row["Mapped as Progeny"] || 0}</td>`;
-                tr += `<td>${row["Mapped as Self"] || 0}</td>`;
-                tr += `<td>${row["No Mapping"] || 0}</td>`;
-                tr += `<td>${row["UEF Death"] || 0}</td>`;
-                tr += `<td>${row["UEF Permanent Shifting"] || 0}</td>`;
-                tr += `<td>${row["UEF Already Enrolled"] || 0}</td>`;
-                tr += `<td>${row["UEF Absent"] || 0}</td>`;
-                tr += `<td>${row["UEF Others"] || 0}</td>`;
-                tr += `<td>${row["Total UEF"] || 0}</td>`;
-                tr += `<td>${row["EF Parts Downloaded"] || ""}</td>`;
-                tr += "</tr>";
-                tBody.innerHTML += tr;
+                matchedRows.push({
+                    supName: bloMapping[partNo].supName,
+                    bloName: bloMapping[partNo].bloName,
+                    partNo: partNo,
+                    data: row
+                });
             }
         });
 
-        document.getElementById('loadingMsg').style.display = 'none';
-        
-        if (matchCount === 0) {
-            alert("तुम्ही अपलोड केलेल्या फाईलमधील पार्ट नंबर्स आणि तुमच्या डॅशबोर्डवरील पार्ट नंबर्स मॅच झाले नाहीत. कृपया योग्य फाईल तपासा.");
-        } else {
-            document.getElementById('pdfContent').style.display = 'block';
-            document.getElementById('downloadPdfBtn').style.display = 'block';
+        if (matchedRows.length === 0) {
+            document.getElementById('loadingMsg').style.display = 'none';
+            alert("पार्ट नंबर्स मॅच झाले नाहीत.");
+            return;
         }
+
+        // सुपरवायझरच्या नावानुसार डेटा सॉर्ट करणे
+        matchedRows.sort((a, b) => a.supName.localeCompare(b.supName));
+
+        // बेरजेसाठी व्हेरिएबल्स
+        let currentSup = "";
+        let srNo = 1;
+        
+        // १६ रकाने ज्यांची बेरीज करायची आहे (Index 4 ते 17)
+        const numericKeys = [
+            "Total Elector", "Total EFs Distributed", "Total EFs Digitized", 
+            "EFs Submitted by Elector ( Not verified by BLO)", "EFs Verified by BLO", 
+            "Mapped as Progeny", "Mapped as Self", "No Mapping", "UEF Death", 
+            "UEF Permanent Shifting", "UEF Already Enrolled", "UEF Absent", "UEF Others", "Total UEF"
+        ];
+
+        let supTotals = Array(numericKeys.length).fill(0);
+        let grandTotals = Array(numericKeys.length).fill(0);
+
+        // फंक्शन: बेरीज करणारी रांग (Row) तयार करणे
+        function createTotalRow(title, totalsArray, cssClass) {
+            let tr = `<tr class="${cssClass}"><td colspan="4" style="text-align:right;">${title}</td>`;
+            totalsArray.forEach(val => tr += `<td>${val}</td>`);
+            tr += `<td>-</td></tr>`; // शेवटचा कॉलम EF Parts Downloaded साठी डॅश
+            return tr;
+        }
+
+        // डेटा टेबलमध्ये भरणे
+        matchedRows.forEach(item => {
+            // जर सुपरवायझर बदलला, तर जुन्या सुपरवायझरची टोटल प्रिंट करा
+            if (currentSup !== "" && currentSup !== item.supName) {
+                tBody.innerHTML += createTotalRow(`${currentSup} (एकूण)`, supTotals, "subtotal-row");
+                supTotals = Array(numericKeys.length).fill(0); // रिसेट करा
+            }
+            
+            currentSup = item.supName;
+            
+            // रेग्युलर डेटा प्रिंट करणे
+            let tr = "<tr>";
+            tr += `<td>${srNo++}</td>`;
+            tr += `<td><b>${item.supName}</b></td>`;
+            tr += `<td>${item.bloName}</td>`;
+            tr += `<td>${item.partNo}</td>`;
+            
+            // आकडेवारी आणि बेरीज
+            numericKeys.forEach((key, index) => {
+                let val = parseInt(item.data[key]) || 0;
+                tr += `<td>${val}</td>`;
+                supTotals[index] += val;
+                grandTotals[index] += val;
+            });
+            
+            tr += `<td>${item.data["EF Parts Downloaded"] || ""}</td>`;
+            tr += "</tr>";
+            tBody.innerHTML += tr;
+        });
+
+        // शेवटच्या सुपरवायझरची टोटल
+        if (currentSup !== "") {
+            tBody.innerHTML += createTotalRow(`${currentSup} (एकूण)`, supTotals, "subtotal-row");
+        }
+
+        // ग्रँड टोटल (Grand Total)
+        tBody.innerHTML += createTotalRow(`सर्व सुपरवायझर (एकंदर बेरीज)`, grandTotals, "grandtotal-row");
+
+        // दिनांक आणि वेळ सेट करणे
+        let now = new Date();
+        document.getElementById('reportDateTime').innerText = "अहवाल दिनांक व वेळ: " + now.toLocaleString('en-IN');
+
+        document.getElementById('loadingMsg').style.display = 'none';
+        document.getElementById('pdfContent').style.display = 'block';
+        document.getElementById('downloadPdfBtn').style.display = 'block';
     }
 
-    // ५. HTML टेबलचे PDF बनवून डाऊनलोड करणे
+    // ४. PDF जनरेट करणे (A4 Landscape)
     function downloadPDF() {
         const element = document.getElementById('pdfContent');
-        // PDF मध्ये प्रिंटसाठी हेडर दाखवणे
         document.querySelector('.print-header').style.display = 'block';
         
+        // बटणे किंवा इतर गोष्टी लपवायच्या असल्यास इथून करू शकता
+        
         const opt = {
-            margin:       5,
+            margin:       [10, 5, 10, 5], // टॉप, लेफ्ट, बॉटम, राईट मार्जिन
             filename:     'BLO_Progress_Report.pdf',
             image:        { type: 'jpeg', quality: 0.98 },
             html2canvas:  { scale: 2 },
-            jsPDF:        { unit: 'mm', format: 'a3', orientation: 'landscape' } // A3 Landscape कारण कॉलम्स खूप आहेत
+            jsPDF:        { unit: 'mm', format: 'a4', orientation: 'landscape' },
+            pagebreak:    { mode: 'css' } // पेज ब्रेकसाठी CSS वापरणे
         };
 
         html2pdf().set(opt).from(element).save().then(() => {
-            // डाऊनलोड झाल्यावर हेडर पुन्हा लपवणे
+            // PDF डाऊनलोड झाल्यावर हेडर पुन्हा लपवणे (वेब व्ह्यूसाठी)
             document.querySelector('.print-header').style.display = 'none';
         });
     }
