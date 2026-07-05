@@ -5,60 +5,46 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>BLO प्रगती अहवाल - SIR वाशिम</title>
     
-    <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     
-    <!-- SheetJS (Excel वाचण्यासाठी) -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     
     <style>
-        body { background-color: #f4f7f6; font-family: 'Arial Unicode MS', Mangal, Arial, sans-serif; }
+        body { background-color: #f4f7f6; font-family: 'Arial Unicode MS', Arial, sans-serif; }
         
-        .table-wrapper { overflow-x: auto; background: white; padding: 10px; margin-bottom: 20px;}
+        .table-wrapper { overflow-x: auto; background: white; padding: 15px; border-radius: 8px; margin-bottom: 20px;}
         
-        /* कॉम्पॅक्ट टेबल सेटिंग्ज */
-        table { width: 100%; table-layout: fixed; font-size: 9px; border-collapse: collapse; margin-bottom: 15px; background-color: white; }
+        /* टेबलला सुटसुटीत आणि वाचनीय बनवण्यासाठी */
+        table { width: 100%; table-layout: auto; font-size: 11px; border-collapse: collapse; margin-bottom: 20px; }
         
         th, td { 
-            padding: 3px !important; /* पॅडिंग कमी करून जागा वाचवली */
+            padding: 6px 4px !important; 
             text-align: center; 
             vertical-align: middle; 
             white-space: normal; 
-            word-wrap: break-word; 
-            border: 1px solid #444; 
-            line-height: 1.1;
+            border: 1px solid #777; 
         }
         
-        /* कॉलमच्या हेडर्सचा रंग */
-        .col-header th { background-color: #003366 !important; color: white !important; font-size: 10px; }
+        /* हेडर्सचा रंग आणि फॉन्ट */
+        th { background-color: #003366 !important; color: white !important; font-size: 11px; }
         
         .subtotal-row { background-color: #e9ecef !important; font-weight: bold; }
-        .grandtotal-row { background-color: #ffc107 !important; color: black !important; font-weight: bold; font-size: 11px; border-top: 2px solid #000; }
+        .grandtotal-row { background-color: #ffc107 !important; color: black !important; font-weight: bold; font-size: 12px; border-top: 2px solid #000; }
         
-        #pdfContent { display: none; padding: 0; }
+        #pdfContent { display: none; }
         
-        /* =========================================
-           PRINT & PDF CSS (कॉम्पॅक्ट आणि परफेक्ट पेज ब्रेक)
-           ========================================= */
-        @media print {
-            nav, .upload-section { display: none !important; }
-            body { background-color: white !important; margin: 0; padding: 0; }
-            .table-wrapper { border: none !important; box-shadow: none !important; padding: 0; }
-            
-            /* A4 Landscape आणि अत्यंत कमी मार्जिन */
-            @page { size: A4 landscape; margin: 5mm; }
-            
-            * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
-            
-            /* प्रत्येक पानावर टेबल हेडर (टायटलसह) रिपीट होण्यासाठी */
-            thead { display: table-header-group; }
-            tr { page-break-inside: avoid; }
-        }
+        /* प्रत्येक पानावर येणारे हेडिंग */
+        .print-header { text-align: center; margin-bottom: 12px; color: #003366; }
+        .print-header h3 { margin: 0; padding: 0; font-weight: bold; font-size: 18px; }
+        .print-header p { margin: 5px 0 0 0; font-size: 12px; font-weight: bold; color: #333; }
+        
+        /* html2pdf साठी पेज ब्रेक क्लास */
+        .html2pdf__page-break { margin-top: 20px; }
     </style>
 </head>
 <body>
 
-<!-- नेव्हिगेशन मेनू -->
 <nav class="navbar navbar-expand-lg navbar-dark shadow-sm" style="background-color: #003366;">
   <div class="container-fluid">
     <a class="navbar-brand fw-bold" href="index.html">SIR वाशिम</a>
@@ -76,26 +62,24 @@
 </nav>
 
 <div class="container-fluid mt-4">
-    <h4 class="text-center text-primary fw-bold mb-4 upload-section">BLO प्रगती अहवाल जनरेटर</h4>
+    <h4 class="text-center text-primary fw-bold mb-4">BLO प्रगती अहवाल जनरेटर</h4>
     
-    <!-- फाईल अपलोड सेक्शन -->
-    <div class="row justify-content-center mb-4 upload-section">
+    <div class="row justify-content-center mb-4">
         <div class="col-md-6">
             <div class="card p-4 shadow-sm border-primary text-center">
                 <label class="form-label fw-bold">ECI ची Excel फाईल अपलोड करा:</label>
                 <input type="file" id="excelUpload" class="form-control mb-3" accept=".xlsx, .xls, .csv">
                 
-                <div id="loadingMsg" class="text-warning fw-bold mt-2" style="display:none;">⏳ डेटा मॅच करत आहे...</div>
+                <div id="loadingMsg" class="text-warning fw-bold mt-2" style="display:none;">⏳ डेटा मॅच आणि कॅल्क्युलेट करत आहे...</div>
                 
                 <button id="downloadPdfBtn" class="btn btn-danger fw-bold w-100" style="display:none;" onclick="downloadPDF()">
-                    📄 PDF डाऊनलोड करा (Save as PDF)
+                    📄 PDF जनरेट करा आणि डाऊनलोड करा
                 </button>
             </div>
         </div>
     </div>
 
-    <!-- रिपोर्ट दाखवण्यासाठी मुख्य कंटेनर -->
-    <div class="table-wrapper" id="pdfContent"></div>
+    <div class="table-wrapper shadow-sm border" id="pdfContent"></div>
 </div>
 
 <script>
@@ -142,21 +126,13 @@
         const pdfContainer = document.getElementById('pdfContent');
         pdfContainer.innerHTML = ""; 
 
+        // मूळ हेडर्स पुन्हा ऍड केले
         const headers = [
-            "Sr", "Supervisor", "Name of BLO", "Part", 
-            "Total Elector", "EFs Distri- buted", "EFs Digi- tized", 
-            "Submit (Not Veri)", "Verified by BLO", "Mapped Progeny", 
-            "Mapped as Self", "No Mapping", "UEF Death", "UEF Perm. Shift", 
-            "Already Enrolled", "UEF Absent", "UEF Others", "Total UEF"
-        ];
-
-        // कॉलम रुंदीचे अचूक नियोजन (Total 100%)
-        const colWidths = [
-            "3%",  // Sr
-            "8%",  // Supervisor
-            "13%", // Name of BLO
-            "4%",  // Part No
-            "5.1%","5.1%","5.1%","5.1%","5.1%","5.1%","5.1%","5.1%","5.1%","5.1%","5.1%","5.1%","5.1%","5.1%" // 14 Cols = ~72%
+            "Sr. No", "Name of Supervisor", "Name of BLO", "Part Number", 
+            "Total Elector", "Total EFs Distributed", "Total EFs Digitized", 
+            "EFs Submitted (Not verified)", "EFs Verified by BLO", "Mapped as Progeny", 
+            "Mapped as Self", "No Mapping", "UEF Death", "UEF Permanent Shifting", 
+            "UEF Already Enrolled", "UEF Absent", "UEF Others", "Total UEF"
         ];
 
         const numericKeys = [
@@ -197,28 +173,37 @@
         let srNo = 1;
         let finalHtml = "";
 
-        // प्रत्येक सुपरवायझरसाठी स्वतंत्र टेबल (Page break सह)
+        // प्रत्येक सुपरवायझरचा स्वतंत्र ब्लॉक
         supervisorNames.forEach((sup, index) => {
             let supRows = groupedData[sup];
             let supTotals = Array(numericKeys.length).fill(0);
             
             // दुसऱ्या सुपरवायझरपासून पेज ब्रेक लावणे
-            let pageBreakStyle = index > 0 ? 'page-break-before: always;' : '';
+            let pageBreakClass = index > 0 ? "html2pdf__page-break" : "";
             
-            finalHtml += `<table style="${pageBreakStyle}">`;
+            finalHtml += `<div class="${pageBreakClass}">`;
             
-            // THEAD: यामध्ये मुख्य हेडिंग आणि कॉलम्स दिले आहेत, जेणेकरून ते प्रत्येक पानावर रिपीट होतील
-            finalHtml += `<thead>`;
+            // हेडिंग (प्रत्येक ब्लॉकच्या वर येईल, म्हणजेच प्रत्येक पेजवर दिसेल)
             finalHtml += `
-                <tr>
-                    <th colspan="18" style="background-color: white !important; color: #003366 !important; border: none; padding-bottom: 8px !important;">
-                        <h3 style="margin: 0; font-size: 16px; font-weight: bold;">BLO प्रगती अहवाल (AERO श्री अभिजीत देवगिरकर)</h3>
-                        <p style="margin: 3px 0 0 0; font-size: 11px; color: #333 !important;">${reportDateStr}</p>
-                    </th>
-                </tr>
-                <tr class="col-header">`;
-            headers.forEach((h, i) => {
-                finalHtml += `<th style="width: ${colWidths[i]};">${h}</th>`;
+            <div class="print-header">
+                <h3>BLO प्रगती अहवाल (AERO श्री अभिजीत देवगिरकर)</h3>
+                <p>${reportDateStr}</p>
+                <hr style="border: 1px solid #003366; margin-top: 10px; margin-bottom: 10px;">
+            </div>`;
+            
+            finalHtml += `<table><thead><tr>`;
+            
+            // हेडर्स आणि कॉलमची रुंदी (Width Adjustment)
+            headers.forEach(h => {
+                if (h === "Name of Supervisor") {
+                    finalHtml += `<th style="width: 8%;">${h}</th>`;
+                } else if (h === "Name of BLO") {
+                    finalHtml += `<th style="width: 14%;">${h}</th>`;
+                } else if (h === "Sr. No" || h === "Part Number") {
+                    finalHtml += `<th style="width: 4%;">${h}</th>`;
+                } else {
+                    finalHtml += `<th>${h}</th>`;
+                }
             });
             finalHtml += `</tr></thead><tbody>`;
 
@@ -250,7 +235,7 @@
             supTotals.forEach(val => finalHtml += `<td>${val}</td>`);
             finalHtml += `</tr>`;
 
-            // सर्वात शेवटी ग्रँड टोटल ऍड करणे
+            // सर्वात शेवटी ग्रँड टोटल
             if (index === supervisorNames.length - 1) {
                 finalHtml += `<tr class="grandtotal-row">`;
                 finalHtml += `<td colspan="4" style="text-align:right;">सर्व सुपरवायझर (एकंदर बेरीज)</td>`;
@@ -258,7 +243,7 @@
                 finalHtml += `</tr>`;
             }
 
-            finalHtml += `</tbody></table>`;
+            finalHtml += `</tbody></table></div>`;
         });
 
         pdfContainer.innerHTML = finalHtml;
@@ -268,9 +253,19 @@
         document.getElementById('downloadPdfBtn').style.display = 'block';
     }
 
-    // PDF बनवण्याची मूळ पद्धत
+    // PDF जनरेट करण्याची पूर्वीची सिस्टीम (html2pdf)
     function downloadPDF() {
-        window.print();
+        const element = document.getElementById('pdfContent');
+        const opt = {
+            margin:       5,
+            filename:     'BLO_Progress_Report_AERO.pdf',
+            image:        { type: 'jpeg', quality: 0.98 },
+            html2canvas:  { scale: 2, useCORS: true },
+            jsPDF:        { unit: 'mm', format: 'a4', orientation: 'landscape' },
+            pagebreak:    { mode: ['css', 'legacy'] }
+        };
+
+        html2pdf().set(opt).from(element).save();
     }
 </script>
 </body>
