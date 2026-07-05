@@ -91,11 +91,10 @@
     // तुमची Google Apps Script URL
     const scriptURL = 'https://script.google.com/macros/s/AKfycbyp8OWRFBts_lfMSK4VdK0k6OSn7eyBTu0tu9XEjCpgIWevzvuE24mv54VJKm2tk2B7cQ/exec';
 
-    // सेक्शन बदलण्याचे फंक्शन (Navigation Logic)
+    // सेक्शन बदलण्याचे फंक्शन
     function showSection(sectionId) {
         document.getElementById('dashboardSection').style.display = 'none';
         document.getElementById('reportSection').style.display = 'none';
-        
         document.getElementById(sectionId).style.display = 'block';
     }
 
@@ -148,9 +147,31 @@
             contacts.filter(c => c.Role === "BLO" && c.Reports_To_ID === sup.ID).forEach(blo => {
                 let astsHTML = "";
                 contacts.filter(c => c.Role === "Assistant" && c.Reports_To_ID === blo.ID).forEach(ast => {
-                    astsHTML += `<div class="d-flex justify-content-between mt-1 px-2"><span>${ast.Name} (सहा.)</span><a href="tel:${ast.Mobile_No}" class="btn btn-sm btn-outline-secondary contact-btn">📞</a></div>`;
+                    // सहाय्यकासाठी कॉलिंग आणि WhatsApp दोन्ही
+                    astsHTML += `
+                    <div class="d-flex justify-content-between mt-1 px-2 align-items-center">
+                        <span>${ast.Name} (सहा.)</span>
+                        <div>
+                            <a href="tel:${ast.Mobile_No}" class="btn btn-sm btn-success contact-btn">📞</a>
+                            <a href="https://wa.me/${ast.Mobile_No}" class="btn btn-sm btn-outline-success contact-btn">💬</a>
+                        </div>
+                    </div>`;
                 });
-                blosHTML += `<div class="border p-2 mb-2 rounded bg-white"><div class="d-flex justify-content-between align-items-center"><div><strong>${blo.Name}</strong><br><small class="text-muted">प्रभाग/भाग: ${blo.Ward_Area}</small></div><a href="tel:${blo.Mobile_No}" class="btn btn-sm btn-success contact-btn">📞</a></div><hr class="my-1"><small class="text-muted">सहाय्यक टीम:</small>${astsHTML}</div>`;
+                
+                // BLO साठी कॉलिंग आणि WhatsApp दोन्ही
+                blosHTML += `
+                <div class="border p-2 mb-2 rounded bg-white">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div><strong>${blo.Name}</strong><br><small class="text-muted">प्रभाग/भाग: ${blo.Ward_Area}</small></div>
+                        <div>
+                            <a href="tel:${blo.Mobile_No}" class="btn btn-sm btn-success contact-btn">📞</a>
+                            <a href="https://wa.me/${blo.Mobile_No}" class="btn btn-sm btn-outline-success contact-btn">💬</a>
+                        </div>
+                    </div>
+                    <hr class="my-1">
+                    <small class="text-muted">सहाय्यक टीम:</small>
+                    ${astsHTML}
+                </div>`;
             });
 
             supervisorsContainer.innerHTML += `
@@ -175,9 +196,16 @@
         });
     }
 
-    // मदतनीस फंक्शन
+    // मदतनीस फंक्शन (इतर स्तरांसाठी)
     function createCardHTML(name, subtext, mobile) {
-        return `<div class="person-card"><div><strong>${name}</strong><br><small>${subtext}</small></div><div><a href="tel:${mobile}" class="btn btn-sm btn-success contact-btn">📞</a> <a href="https://wa.me/${mobile}" class="btn btn-sm btn-outline-success contact-btn">💬</a></div></div>`;
+        return `
+        <div class="person-card">
+            <div><strong>${name}</strong><br><small>${subtext}</small></div>
+            <div>
+                <a href="tel:${mobile}" class="btn btn-sm btn-success contact-btn">📞</a> 
+                <a href="https://wa.me/${mobile}" class="btn btn-sm btn-outline-success contact-btn">💬</a>
+            </div>
+        </div>`;
     }
 
     // PDF जनरेट करण्यासाठीचे फंक्शन
