@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="mr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BLO प्रगती अहवाल - SIR वाशिम</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    
+    <style>
+        body { background-color: #f4f7f6; font-family: Arial, sans-serif; }
+        .table-wrapper { overflow-x: auto; max-height: 600px; }
+        th { background-color: #003366 !important; color: white !important; font-size: 12px; white-space: nowrap; position: sticky; top: 0; z-index: 1;}
+        td { font-size: 12px; white-space: nowrap; }
+        #pdfContent { background: white; padding: 20px; }
+        .print-header { display: none; text-align: center; margin-bottom: 20px; color: #003366; }
+    </style>
+</head>
+<body>
+
+<nav class="navbar navbar-expand-lg navbar-dark shadow-sm" style="background-color: #003366;">
+  <div class="container-fluid">
+    <a class="navbar-brand fw-bold" href="index.html">SIR वाशिम</a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarNav">
+      <ul class="navbar-nav ms-auto">
+        <li class="nav-item"><a class="nav-link" href="index.html">🏠 मुख्य डॅशबोर्ड</a></li>
+        <li class="nav-item"><a class="nav-link active fw-bold" href="#">📊 प्रगती अहवाल (PDF)</a></li>
+        <li class="nav-item"><a class="nav-link text-warning fw-bold" href="entry.html">📝 BLO डेटा एंट्री</a></li>
+      </ul>
+    </div>
+  </div>
+</nav>
+
+<div class="container-fluid mt-4">
+    <h4 class="text-center text-primary fw-bold mb-4">BLO प्रगती अहवाल जनरेटर</h4>
+    
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card p-4 shadow-sm border-primary">
+                <label class="form-label fw-bold">१. ECI ची Excel फाईल अपलोड करा:</label>
+                <input type="file" id="excelUpload" class="form-control" accept=".xlsx, .xls, .csv">
+                
+                <div id="loadingMsg" class="text-warning fw-bold mt-2" style="display:none;">⏳ डेटा मॅच करत आहे, कृपया प्रतीक्षा करा...</div>
+                
+                <button id="downloadPdfBtn" class="btn btn-danger mt-3 fw-bold w-100" style="display:none;" onclick="downloadPDF()">
+                    📄 हा रिपोर्ट PDF मध्ये डाऊनलोड करा
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="mt-4 shadow-sm table-wrapper border" id="pdfContent" style="display: none;">
+        <div class="print-header">
+            <h2>BLO प्रगती अहवाल (SIR नियंत्रण कक्ष, वाशिम)</h2>
+            <hr>
+        </div>
+        <table class="table table-bordered table-hover table-sm" id="reportTable">
+            <thead id="reportHead">
+                </thead>
+            <tbody id="reportBody">
+                </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+    // तुमची Google Apps Script URL
+    const scriptURL = 'https://script.google.com/macros/s/AKfycbyp8OWRFBts_lfMSK4VdK0k6OSn7eyBTu0tu9XEjCpgIWevzvuE24mv54VJKm2tk2B7cQ/exec';
+    
+    let bloMapping = {}; // पार्ट नंबर नुसार BLO आणि Supervisor चा डेटा साठवण्यासाठी
+
+    // १. पेज लोड होताच Google Sheet मधून Hierarchy डेटा आणणे
+    document.addEventListener("DOMContentLoaded", function() {
+        fetch(scriptURL)
+            .then(response => response.json())
+            .then(data => buildMapping(data))
+            .catch(error => alert('Hierarchy डेटा लोड करताना त्रुटी आली! इंटरनेट तपासा.'));
+    });
+
+    // २. पार्ट नंबर (Ward_Area) नुसार डिक्शनरी बनवणे
+    function buildMapping(contacts) {
+        contacts.filter(c => c.Role === "BLO").forEach(blo => {
+            // BLO चा Supervisor शोधणे
+            let supervisor = contacts.find(c => c.ID === blo.Reports_To_ID);
+            let partNo = String(blo.Ward_Area).trim();
+            
+            bloMapping[partNo] = {
+                bloName: blo.Name,
+                supName: supervisor ? supervisor.Name : "N/A"
+            };
+        });
+        console.log("Mapping Ready:", bloMapping);
+    }
+
+    // ३. Excel फाईल अपलोड केल्यावर वाचणे
+    document.getElementById('excelUpload').addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        document.getElementById('loadingMsg').style.display = 'block';
+        
+        const reader = new FileReader();
+        reader.onload = function(event) {
+            const data = new Uint8Array(event.target.result);
+            const workbook = XLSX.read(data, {type: 'array'});
+            const firstSheetName = workbook.SheetNames[0];
+            const worksheet = workbook.Sheets[firstSheetName];
+            
+            // Excel चा डेटा JSON मध्ये कन्व्हर्ट करणे
+            const excelJson = XLSX.utils.sheet_to_json(worksheet);
+            generateReport(excelJson);
+        };
+        reader.readAsArrayBuffer(file);
+    });
+
+    // ४. रिपोर्ट जनरेट करून HTML टेबलमध्ये टाकणे
+    function generateReport(excelData) {
+        const tHead = document.getElementById('reportHead');
+        const tBody = document.getElementById('reportBody');
+        tHead.innerHTML = "";
+        tBody.innerHTML = "";
+
+        // कॉलम्सची नावे
+        const headers = [
+            "Asmbly Name", "Name of Supervisor", "Name of BLO", "Part Number", 
+            "Total Elector", "Total EFs Distributed", "Total EFs Digitized", 
+            "EFs Submitted by Elector", "EFs Verified by BLO", "Mapped as Progeny", 
+            "Mapped as Self", "No Mapping", "UEF Death", "UEF Permanent Shifting", 
+            "UEF Already Enrolled", "UEF Absent", "UEF Others", "Total UEF", "EF Parts Downloaded"
+        ];
+
+        // टेबलचे हेडर बनवणे
+        let trHead = "<tr>";
+        headers.forEach(h => trHead += `<th>${h}</th>`);
+        trHead += "</tr>";
+        tHead.innerHTML = trHead;
+
+        let matchCount = 0;
+
+        // Excel च्या प्रत्येक रांगेसाठी
+        excelData.forEach(row => {
+            let partNo = String(row["Part Number"]).trim();
+            
+            // जर हा पार्ट नंबर आपल्या डिक्शनरीमध्ये (Google Sheet मध्ये) असेल, तरच घ्या
+            if (bloMapping[partNo]) {
+                matchCount++;
+                let supName = bloMapping[partNo].supName;
+                let bloName = bloMapping[partNo].bloName;
+
+                let tr = "<tr>";
+                tr += `<td>${row["Asmbly Name"] || ""}</td>`;
+                tr += `<td><b>${supName}</b></td>`;
+                tr += `<td><b>${bloName}</b></td>`;
+                tr += `<td>${partNo}</td>`;
+                tr += `<td>${row["Total Elector"] || 0}</td>`;
+                tr += `<td>${row["Total EFs Distributed"] || 0}</td>`;
+                tr += `<td>${row["Total EFs Digitized"] || 0}</td>`;
+                tr += `<td>${row["EFs Submitted by Elector ( Not verified by BLO)"] || 0}</td>`;
+                tr += `<td>${row["EFs Verified by BLO"] || 0}</td>`;
+                tr += `<td>${row["Mapped as Progeny"] || 0}</td>`;
+                tr += `<td>${row["Mapped as Self"] || 0}</td>`;
+                tr += `<td>${row["No Mapping"] || 0}</td>`;
+                tr += `<td>${row["UEF Death"] || 0}</td>`;
+                tr += `<td>${row["UEF Permanent Shifting"] || 0}</td>`;
+                tr += `<td>${row["UEF Already Enrolled"] || 0}</td>`;
+                tr += `<td>${row["UEF Absent"] || 0}</td>`;
+                tr += `<td>${row["UEF Others"] || 0}</td>`;
+                tr += `<td>${row["Total UEF"] || 0}</td>`;
+                tr += `<td>${row["EF Parts Downloaded"] || ""}</td>`;
+                tr += "</tr>";
+                tBody.innerHTML += tr;
+            }
+        });
+
+        document.getElementById('loadingMsg').style.display = 'none';
+        
+        if (matchCount === 0) {
+            alert("तुम्ही अपलोड केलेल्या फाईलमधील पार्ट नंबर्स आणि तुमच्या डॅशबोर्डवरील पार्ट नंबर्स मॅच झाले नाहीत. कृपया योग्य फाईल तपासा.");
+        } else {
+            document.getElementById('pdfContent').style.display = 'block';
+            document.getElementById('downloadPdfBtn').style.display = 'block';
+        }
+    }
+
+    // ५. HTML टेबलचे PDF बनवून डाऊनलोड करणे
+    function downloadPDF() {
+        const element = document.getElementById('pdfContent');
+        // PDF मध्ये प्रिंटसाठी हेडर दाखवणे
+        document.querySelector('.print-header').style.display = 'block';
+        
+        const opt = {
+            margin:       5,
+            filename:     'BLO_Progress_Report.pdf',
+            image:        { type: 'jpeg', quality: 0.98 },
+            html2canvas:  { scale: 2 },
+            jsPDF:        { unit: 'mm', format: 'a3', orientation: 'landscape' } // A3 Landscape कारण कॉलम्स खूप आहेत
+        };
+
+        html2pdf().set(opt).from(element).save().then(() => {
+            // डाऊनलोड झाल्यावर हेडर पुन्हा लपवणे
+            document.querySelector('.print-header').style.display = 'none';
+        });
+    }
+</script>
+</body>
+</html>
