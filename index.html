@@ -7,102 +7,104 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
         body { background-color: #f4f7f6; font-family: Arial, sans-serif; }
-        .header-title { background-color: #003366; color: white; padding: 15px; text-align: center; border-radius: 5px; }
+        .header-title { background-color: #003366; color: white; padding: 15px; text-align: center; border-radius: 5px; margin-bottom: 20px; }
         .contact-btn { font-size: 14px; margin-left: 5px; }
         .person-card { display: flex; justify-content: space-between; align-items: center; padding: 10px; border: 1px solid #ddd; border-radius: 5px; background-color: #fff; margin-bottom: 5px; }
+        /* मेनूच्या खाली थोडी मोकळी जागा सोडण्यासाठी */
+        .main-content { margin-top: 20px; }
     </style>
 </head>
 <body>
 
-<nav class="navbar navbar-expand-lg navbar-dark" style="background-color: #003366;">
+<!-- १. नेव्हिगेशन मेनू (Navbar) -->
+<nav class="navbar navbar-expand-lg navbar-dark shadow-sm" style="background-color: #003366;">
   <div class="container-fluid">
     <a class="navbar-brand fw-bold" href="#">SIR वाशिम</a>
-    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
       <span class="navbar-toggler-icon"></span>
     </button>
     <div class="collapse navbar-collapse" id="navbarNav">
       <ul class="navbar-nav ms-auto">
-        
         <li class="nav-item">
           <a class="nav-link active" href="#" onclick="showSection('dashboardSection')">🏠 मुख्य डॅशबोर्ड</a>
         </li>
-        
         <li class="nav-item">
           <a class="nav-link" href="#" onclick="showSection('reportSection')">📊 प्रगती अहवाल (PDF)</a>
         </li>
-        
         <li class="nav-item">
           <a class="nav-link text-warning fw-bold" href="entry.html">📝 BLO डेटा एंट्री</a>
         </li>
-
       </ul>
     </div>
   </div>
 </nav>
 
-<div id="dashboardSection">
-    </div>
-
-<div id="reportSection" style="display: none;" class="container mt-4">
-    <h4 class="text-center text-primary">BLO प्रगती अहवाल जनरेटर</h4>
-    <div class="card p-3 mt-3 shadow-sm">
-        <label class="form-label fw-bold">इलेक्शन कमिशनची Excel फाईल अपलोड करा:</label>
-        <input type="file" id="excelUpload" class="form-control" accept=".xlsx, .xls, .csv">
-        <button class="btn btn-success mt-3" onclick="generatePDF()">📄 PDF जनरेट करा आणि डाऊनलोड करा</button>
-    </div>
+<!-- मुख्य कंटेनर -->
+<div class="container main-content">
     
-    <div id="tablePreview" class="mt-4"></div>
-</div>
-
-<script>
-    function showSection(sectionId) {
-        // सर्व सेक्शन लपवणे
-        document.getElementById('dashboardSection').style.display = 'none';
-        document.getElementById('reportSection').style.display = 'none';
+    <!-- २. मुख्य डॅशबोर्ड सेक्शन (ट्री डायग्राम) -->
+    <div id="dashboardSection">
+        <h4 class="header-title shadow-sm">SIR नियंत्रण कक्ष, वाशिम</h4>
         
-        // जो मेनू निवडला आहे तोच दाखवणे
-        document.getElementById(sectionId).style.display = 'block';
-    }
-</script>
-    
-<div class="container mt-3">
-    <h4 class="header-title">SIR नियंत्रण कक्ष, वाशिम</h4>
-    
-    <div class="text-end mb-3">
-        <a href="entry.html" class="btn btn-warning fw-bold">📝 BLO डेटा एंट्री (लॉगिन)</a>
-    </div>
+        <div id="aeroContainer"></div>
 
-    <div id="aeroContainer"></div>
-
-    <div class="accordion" id="hierarchyAccordion">
-        <div class="accordion-item">
-            <h2 class="accordion-header"><button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseNodal"><strong>नोडल अधिकारी</strong></button></h2>
-            <div id="collapseNodal" class="accordion-collapse collapse show" data-bs-parent="#hierarchyAccordion">
-                <div class="accordion-body" id="nodalContainer">लोड होत आहे...</div>
+        <div class="accordion shadow-sm" id="hierarchyAccordion">
+            <div class="accordion-item">
+                <h2 class="accordion-header">
+                    <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseNodal"><strong>नोडल अधिकारी</strong></button>
+                </h2>
+                <div id="collapseNodal" class="accordion-collapse collapse show" data-bs-parent="#hierarchyAccordion">
+                    <div class="accordion-body" id="nodalContainer">लोड होत आहे...</div>
+                </div>
             </div>
-        </div>
 
-        <div class="accordion-item">
-            <h2 class="accordion-header"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseAssistants"><strong>कार्यालयीन सहाय्यक</strong></button></h2>
-            <div id="collapseAssistants" class="accordion-collapse collapse" data-bs-parent="#hierarchyAccordion">
-                <div class="accordion-body" id="assistantContainer">लोड होत आहे...</div>
+            <div class="accordion-item">
+                <h2 class="accordion-header">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseAssistants"><strong>कार्यालयीन सहाय्यक</strong></button>
+                </h2>
+                <div id="collapseAssistants" class="accordion-collapse collapse" data-bs-parent="#hierarchyAccordion">
+                    <div class="accordion-body" id="assistantContainer">लोड होत आहे...</div>
+                </div>
             </div>
-        </div>
 
-        <div class="accordion-item">
-            <h2 class="accordion-header"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSupervisors"><strong>पर्यवेक्षक व BLO टीम</strong></button></h2>
-            <div id="collapseSupervisors" class="accordion-collapse collapse" data-bs-parent="#hierarchyAccordion">
-                <div class="accordion-body p-2" id="supervisorsContainer">लोड होत आहे...</div>
+            <div class="accordion-item">
+                <h2 class="accordion-header">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSupervisors"><strong>पर्यवेक्षक व BLO टीम</strong></button>
+                </h2>
+                <div id="collapseSupervisors" class="accordion-collapse collapse" data-bs-parent="#hierarchyAccordion">
+                    <div class="accordion-body p-2" id="supervisorsContainer">लोड होत आहे...</div>
+                </div>
             </div>
         </div>
     </div>
+
+    <!-- ३. प्रगती अहवाल सेक्शन (सुरुवातीला लपवलेला असेल) -->
+    <div id="reportSection" style="display: none;">
+        <h4 class="text-center text-primary fw-bold mt-2">BLO प्रगती अहवाल जनरेटर</h4>
+        <div class="card p-4 mt-3 shadow border-0" style="border-radius: 10px;">
+            <label class="form-label fw-bold">इलेक्शन कमिशनची Excel फाईल अपलोड करा:</label>
+            <input type="file" id="excelUpload" class="form-control" accept=".xlsx, .xls, .csv">
+            <button class="btn btn-success mt-3 fw-bold" onclick="generatePDF()">📄 PDF जनरेट करा आणि डाऊनलोड करा</button>
+        </div>
+        <div id="tablePreview" class="mt-4"></div>
+    </div>
+
 </div>
 
+<!-- Bootstrap & Custom Scripts -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script>
     // तुमची Google Apps Script URL
     const scriptURL = 'https://script.google.com/macros/s/AKfycbyp8OWRFBts_lfMSK4VdK0k6OSn7eyBTu0tu9XEjCpgIWevzvuE24mv54VJKm2tk2B7cQ/exec';
 
+    // सेक्शन बदलण्याचे फंक्शन (Navigation Logic)
+    function showSection(sectionId) {
+        document.getElementById('dashboardSection').style.display = 'none';
+        document.getElementById('reportSection').style.display = 'none';
+        document.getElementById(sectionId).style.display = 'block';
+    }
+
+    // पेज लोड झाल्यावर डेटा ओढणे
     document.addEventListener("DOMContentLoaded", function() {
         fetch(scriptURL)
             .then(response => response.json())
@@ -111,13 +113,13 @@
     });
 
     function renderHierarchy(contacts) {
-        // १. AERO (नियंत्रक) डायनॅमिक लोड करणे
+        // १. AERO (नियंत्रक)
         const aeroContainer = document.getElementById("aeroContainer");
         aeroContainer.innerHTML = "";
         contacts.filter(c => c.Role === "AERO").forEach(aero => {
             aeroContainer.innerHTML += `
-            <div class="card border-primary mb-3">
-                <div class="card-header bg-primary text-white font-weight-bold">${aero.Role} (नियंत्रक)</div>
+            <div class="card border-primary mb-3 shadow-sm">
+                <div class="card-header bg-primary text-white fw-bold">${aero.Role} (नियंत्रक)</div>
                 <div class="card-body person-card">
                     <div><strong>${aero.Name}</strong><br><small>${aero.Role}, ${aero.Ward_Area}</small></div>
                     <div>
@@ -157,14 +159,33 @@
 
             supervisorsContainer.innerHTML += `
                 <div class="accordion mb-2" id="supAccordion_${index}">
-                    <div class="accordion-item"><h2 class="accordion-header"><button class="accordion-button collapsed bg-light" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSup_${index}">पर्यवेक्षक: <strong>${sup.Name}</strong></button></h2>
-                    <div id="collapseSup_${index}" class="accordion-collapse collapse" data-bs-parent="#supAccordion_${index}"><div class="accordion-body p-2"><div class="text-end mb-2"><a href="tel:${sup.Mobile_No}" class="btn btn-sm btn-success">📞 Call</a> <a href="https://wa.me/${sup.Mobile_No}" class="btn btn-sm btn-outline-success">💬 WA</a></div>${blosHTML}</div></div></div>
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed bg-light" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSup_${index}">
+                                पर्यवेक्षक: <strong>${sup.Name}</strong>
+                            </button>
+                        </h2>
+                        <div id="collapseSup_${index}" class="accordion-collapse collapse" data-bs-parent="#supAccordion_${index}">
+                            <div class="accordion-body p-2">
+                                <div class="text-end mb-2">
+                                    <a href="tel:${sup.Mobile_No}" class="btn btn-sm btn-success">📞 Call</a> 
+                                    <a href="https://wa.me/${sup.Mobile_No}" class="btn btn-sm btn-outline-success">💬 WA</a>
+                                </div>
+                                ${blosHTML}
+                            </div>
+                        </div>
+                    </div>
                 </div>`;
         });
     }
 
     function createCardHTML(name, subtext, mobile) {
         return `<div class="person-card"><div><strong>${name}</strong><br><small>${subtext}</small></div><div><a href="tel:${mobile}" class="btn btn-sm btn-success contact-btn">📞</a> <a href="https://wa.me/${mobile}" class="btn btn-sm btn-outline-success contact-btn">💬</a></div></div>`;
+    }
+
+    // PDF जनरेट करण्यासाठीचे फंक्शन (सध्या रिकामे ठेवले आहे)
+    function generatePDF() {
+        alert("तुम्ही मला एक्सेल फाईलचे हेडर्स सांगितल्यावर आपण या फंक्शनमध्ये PDF चा कोड टाकू!");
     }
 </script>
 </body>
