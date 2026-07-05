@@ -4,34 +4,34 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>BLO प्रगती अहवाल - SIR वाशिम</title>
+    
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Devanagari:wght@400;700&display=swap" rel="stylesheet">
+    
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     
     <style>
-        body { background-color: #f4f7f6; font-family: Arial, sans-serif; }
+        /* मराठी फॉन्ट सर्वत्र लागू करणे */
+        body { background-color: #f4f7f6; font-family: 'Noto Sans Devanagari', Arial, sans-serif; }
         
-        /* टेबलला PDF मध्ये व्यवस्थित बसवण्यासाठी CSS */
         .table-wrapper { overflow-x: auto; background: white; padding: 10px; }
         
-        /* A4 पेजवर बसवण्यासाठी फॉन्ट लहान आणि रॅपिंग */
-        table { width: 100%; table-layout: auto; font-size: 10px; border-collapse: collapse; }
-        
-        /* PDF मध्ये प्रत्येक पानावर हेडर रिपीट होण्यासाठी */
-        thead { display: table-header-group; }
-        tfoot { display: table-footer-group; }
-        tr { page-break-inside: avoid; } /* ओळ अर्धी कट होऊ नये म्हणून */
+        /* A4 Landscape पेजवर बसवण्यासाठी फॉन्ट लहान आणि रॅपिंग */
+        table { width: 100%; table-layout: auto; font-size: 10px; border-collapse: collapse; margin-bottom: 20px; }
         
         th, td { 
             padding: 4px !important; 
             text-align: center; 
             vertical-align: middle; 
-            white-space: normal; /* रॅपिंग चालू करण्यासाठी */
+            white-space: normal; 
             word-wrap: break-word; 
-            border: 1px solid #ddd;
+            border: 1px solid #888; /* PDF मध्ये स्पष्ट बॉर्डर दिसण्यासाठी */
         }
         
-        /* प्रिंट करताना बॅकग्राउंड कलर यावा यासाठी */
         th { 
             background-color: #003366 !important; 
             color: white !important; 
@@ -40,12 +40,17 @@
         }
         
         .subtotal-row { background-color: #e9ecef !important; font-weight: bold; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-        .grandtotal-row { background-color: #ffc107 !important; color: black !important; font-weight: bold; font-size: 11px; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+        .grandtotal-row { background-color: #ffc107 !important; color: black !important; font-weight: bold; font-size: 11px; border-top: 2px solid #000; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
         
         #pdfContent { display: none; padding: 10px; }
-        .print-header { display: none; text-align: center; margin-bottom: 15px; color: #003366; }
-        .print-header h3 { margin: 0; padding: 0; font-weight: bold; }
+        
+        /* प्रत्येक पानावर प्रिंट होणारे हेडिंग */
+        .print-header { text-align: center; margin-bottom: 15px; color: #003366; }
+        .print-header h3 { margin: 0; padding: 0; font-weight: bold; font-size: 18px; }
         .print-header p { margin: 5px 0 0 0; font-size: 12px; font-weight: bold; color: #333; }
+        
+        /* html2pdf साठी पेज ब्रेक क्लास */
+        .html2pdf__page-break { margin-top: 20px; }
     </style>
 </head>
 <body>
@@ -69,7 +74,7 @@
 <div class="container-fluid mt-4">
     <h4 class="text-center text-primary fw-bold mb-4">BLO प्रगती अहवाल जनरेटर</h4>
     
-    <div class="row justify-content-center">
+    <div class="row justify-content-center mb-4">
         <div class="col-md-6">
             <div class="card p-4 shadow-sm border-primary text-center">
                 <label class="form-label fw-bold">ECI ची Excel फाईल अपलोड करा:</label>
@@ -84,23 +89,13 @@
         </div>
     </div>
 
-    <div class="mt-4 shadow-sm table-wrapper border" id="pdfContent">
-        <div class="print-header">
-            <h3>BLO प्रगती अहवाल (श्री अभिजीत देवगिरकर)</h3>
-            <p id="reportDateTime"></p>
-            <hr style="border: 1px solid #003366; margin-top: 10px;">
-        </div>
-        
-        <table id="reportTable">
-            <thead id="reportHead"></thead>
-            <tbody id="reportBody"></tbody>
-        </table>
-    </div>
+    <div class="mt-4 shadow-sm table-wrapper border" id="pdfContent"></div>
 </div>
 
 <script>
     const scriptURL = 'https://script.google.com/macros/s/AKfycbyp8OWRFBts_lfMSK4VdK0k6OSn7eyBTu0tu9XEjCpgIWevzvuE24mv54VJKm2tk2B7cQ/exec';
     let bloMapping = {}; 
+    let reportDateStr = "";
 
     // १. Hierarchy डेटा आणणे
     document.addEventListener("DOMContentLoaded", function() {
@@ -108,6 +103,9 @@
             .then(response => response.json())
             .then(data => buildMapping(data))
             .catch(error => alert('Hierarchy डेटा लोड करताना त्रुटी आली!'));
+            
+        // अहवालाची वेळ सेट करणे
+        reportDateStr = "अहवाल दिनांक व वेळ: " + new Date().toLocaleString('en-IN');
     });
 
     function buildMapping(contacts) {
@@ -124,6 +122,7 @@
         if (!file) return;
 
         document.getElementById('loadingMsg').style.display = 'block';
+        document.getElementById('downloadPdfBtn').style.display = 'none';
         
         const reader = new FileReader();
         reader.onload = function(event) {
@@ -136,25 +135,27 @@
         reader.readAsArrayBuffer(file);
     });
 
-    // ३. रिपोर्ट बनवणे (सॉर्टिंग आणि टोटल्स सह)
+    // ३. रिपोर्ट बनवणे (ग्रुपिंग, रो-स्पॅन आणि स्वतंत्र टेबल्स)
     function generateReport(excelData) {
-        const tHead = document.getElementById('reportHead');
-        const tBody = document.getElementById('reportBody');
-        tHead.innerHTML = ""; tBody.innerHTML = "";
+        const pdfContainer = document.getElementById('pdfContent');
+        pdfContainer.innerHTML = ""; // जुना डेटा पुसणे
 
-        // नवीन हेडर्स (Asmbly Name काढला, Sr. No टाकला)
+        // हेडर्स (EF Parts Downloaded काढले आहे)
         const headers = [
             "Sr. No", "Name of Supervisor", "Name of BLO", "Part Number", 
             "Total Elector", "Total EFs Distributed", "Total EFs Digitized", 
             "EFs Submitted (Not verified)", "EFs Verified by BLO", "Mapped as Progeny", 
             "Mapped as Self", "No Mapping", "UEF Death", "UEF Permanent Shifting", 
-            "UEF Already Enrolled", "UEF Absent", "UEF Others", "Total UEF", "EF Parts Downloaded"
+            "UEF Already Enrolled", "UEF Absent", "UEF Others", "Total UEF"
         ];
 
-        let trHead = "<tr>";
-        headers.forEach(h => trHead += `<th>${h}</th>`);
-        trHead += "</tr>";
-        tHead.innerHTML = trHead;
+        // बेरीज करायचे कॉलम्स (१४ कॉलम्स)
+        const numericKeys = [
+            "Total Elector", "Total EFs Distributed", "Total EFs Digitized", 
+            "EFs Submitted by Elector ( Not verified by BLO)", "EFs Verified by BLO", 
+            "Mapped as Progeny", "Mapped as Self", "No Mapping", "UEF Death", 
+            "UEF Permanent Shifting", "UEF Already Enrolled", "UEF Absent", "UEF Others", "Total UEF"
+        ];
 
         // डेटा फिल्टर आणि मॅप करणे
         let matchedRows = [];
@@ -172,103 +173,112 @@
 
         if (matchedRows.length === 0) {
             document.getElementById('loadingMsg').style.display = 'none';
-            alert("पार्ट नंबर्स मॅच झाले नाहीत.");
+            alert("पार्ट नंबर्स मॅच झाले नाहीत. फाईल तपासा.");
             return;
         }
 
-        // सुपरवायझरच्या नावानुसार डेटा सॉर्ट करणे
-        matchedRows.sort((a, b) => a.supName.localeCompare(b.supName));
-
-        // बेरजेसाठी व्हेरिएबल्स
-        let currentSup = "";
-        let srNo = 1;
-        
-        // १६ रकाने ज्यांची बेरीज करायची आहे (Index 4 ते 17)
-        const numericKeys = [
-            "Total Elector", "Total EFs Distributed", "Total EFs Digitized", 
-            "EFs Submitted by Elector ( Not verified by BLO)", "EFs Verified by BLO", 
-            "Mapped as Progeny", "Mapped as Self", "No Mapping", "UEF Death", 
-            "UEF Permanent Shifting", "UEF Already Enrolled", "UEF Absent", "UEF Others", "Total UEF"
-        ];
-
-        let supTotals = Array(numericKeys.length).fill(0);
-        let grandTotals = Array(numericKeys.length).fill(0);
-
-        // फंक्शन: बेरीज करणारी रांग (Row) तयार करणे
-        function createTotalRow(title, totalsArray, cssClass) {
-            let tr = `<tr class="${cssClass}"><td colspan="4" style="text-align:right;">${title}</td>`;
-            totalsArray.forEach(val => tr += `<td>${val}</td>`);
-            tr += `<td>-</td></tr>`; // शेवटचा कॉलम EF Parts Downloaded साठी डॅश
-            return tr;
-        }
-
-        // डेटा टेबलमध्ये भरणे
+        // सुपरवायझरच्या नावानुसार डेटा ग्रुप करणे
+        let groupedData = {};
         matchedRows.forEach(item => {
-            // जर सुपरवायझर बदलला, तर जुन्या सुपरवायझरची टोटल प्रिंट करा
-            if (currentSup !== "" && currentSup !== item.supName) {
-                tBody.innerHTML += createTotalRow(`${currentSup} (एकूण)`, supTotals, "subtotal-row");
-                supTotals = Array(numericKeys.length).fill(0); // रिसेट करा
+            if (!groupedData[item.supName]) {
+                groupedData[item.supName] = [];
             }
-            
-            currentSup = item.supName;
-            
-            // रेग्युलर डेटा प्रिंट करणे
-            let tr = "<tr>";
-            tr += `<td>${srNo++}</td>`;
-            tr += `<td><b>${item.supName}</b></td>`;
-            tr += `<td>${item.bloName}</td>`;
-            tr += `<td>${item.partNo}</td>`;
-            
-            // आकडेवारी आणि बेरीज
-            numericKeys.forEach((key, index) => {
-                let val = parseInt(item.data[key]) || 0;
-                tr += `<td>${val}</td>`;
-                supTotals[index] += val;
-                grandTotals[index] += val;
-            });
-            
-            tr += `<td>${item.data["EF Parts Downloaded"] || ""}</td>`;
-            tr += "</tr>";
-            tBody.innerHTML += tr;
+            groupedData[item.supName].push(item);
         });
 
-        // शेवटच्या सुपरवायझरची टोटल
-        if (currentSup !== "") {
-            tBody.innerHTML += createTotalRow(`${currentSup} (एकूण)`, supTotals, "subtotal-row");
-        }
+        // सुपरवायझरची नावे A to Z सॉर्ट करणे
+        let supervisorNames = Object.keys(groupedData).sort((a, b) => a.localeCompare(b));
 
-        // ग्रँड टोटल (Grand Total)
-        tBody.innerHTML += createTotalRow(`सर्व सुपरवायझर (एकंदर बेरीज)`, grandTotals, "grandtotal-row");
+        let grandTotals = Array(numericKeys.length).fill(0);
+        let srNo = 1;
+        let finalHtml = "";
 
-        // दिनांक आणि वेळ सेट करणे
-        let now = new Date();
-        document.getElementById('reportDateTime').innerText = "अहवाल दिनांक व वेळ: " + now.toLocaleString('en-IN');
+        // प्रत्येक सुपरवायझरसाठी स्वतंत्र टेबल (आणि नवीन पेज) तयार करणे
+        supervisorNames.forEach((sup, index) => {
+            let supRows = groupedData[sup];
+            let supTotals = Array(numericKeys.length).fill(0);
+            
+            // पहिल्या सुपरवायझरला सोडून बाकी सर्वांसाठी Page Break लागू करणे
+            let pageBreakClass = (index > 0) ? "html2pdf__page-break" : "";
+            
+            finalHtml += `<div class="${pageBreakClass}">`;
+            
+            // हेडिंग (प्रत्येक पानावर येईल)
+            finalHtml += `
+            <div class="print-header">
+                <h3>BLO प्रगती अहवाल (AERO श्री अभिजीत देवगिरकर)</h3>
+                <p>${reportDateStr}</p>
+                <hr style="border: 1px solid #003366; margin-top: 10px; margin-bottom: 5px;">
+            </div>`;
+            
+            // टेबल सुरू
+            finalHtml += `<table><thead><tr>`;
+            headers.forEach(h => finalHtml += `<th>${h}</th>`);
+            finalHtml += `</tr></thead><tbody>`;
 
+            // सुपरवायझर मधील BLO ची माहिती भरणे
+            supRows.forEach((item, rowIndex) => {
+                finalHtml += `<tr>`;
+                finalHtml += `<td>${srNo++}</td>`;
+                
+                // सुपरवायझरचे नाव मर्ज करणे (फक्त पहिल्या ओळीत दाखवणे)
+                if (rowIndex === 0) {
+                    finalHtml += `<td rowspan="${supRows.length}" style="vertical-align: middle; background-color: #fdfdfd;"><b>${item.supName}</b></td>`;
+                }
+                
+                finalHtml += `<td>${item.bloName}</td>`;
+                finalHtml += `<td>${item.partNo}</td>`;
+                
+                // आकडेवारी आणि बेरीज
+                numericKeys.forEach((key, kIndex) => {
+                    let val = parseInt(item.data[key]) || 0;
+                    finalHtml += `<td>${val}</td>`;
+                    supTotals[kIndex] += val;
+                    grandTotals[kIndex] += val;
+                });
+                
+                finalHtml += `</tr>`;
+            });
+
+            // सुपरवायझरची बेरीज (Subtotal)
+            finalHtml += `<tr class="subtotal-row">`;
+            // colspan="3" कारण SrNo, Name of BLO, आणि Part No ची जागा भरतो (Supervisor मर्ज झालेला आहे)
+            finalHtml += `<td colspan="3" style="text-align:right;">${sup} (एकूण)</td>`;
+            supTotals.forEach(val => finalHtml += `<td>${val}</td>`);
+            finalHtml += `</tr>`;
+
+            // जर हा शेवटचा सुपरवायझर असेल, तर ग्रँड टोटल (Grand Total) इथेच ॲड करा
+            if (index === supervisorNames.length - 1) {
+                finalHtml += `<tr class="grandtotal-row">`;
+                finalHtml += `<td colspan="4" style="text-align:right;">सर्व सुपरवायझर (एकंदर बेरीज)</td>`;
+                grandTotals.forEach(val => finalHtml += `<td>${val}</td>`);
+                finalHtml += `</tr>`;
+            }
+
+            finalHtml += `</tbody></table></div>`;
+        });
+
+        pdfContainer.innerHTML = finalHtml;
+        
         document.getElementById('loadingMsg').style.display = 'none';
-        document.getElementById('pdfContent').style.display = 'block';
+        pdfContainer.style.display = 'block';
         document.getElementById('downloadPdfBtn').style.display = 'block';
     }
 
-    // ४. PDF जनरेट करणे (A4 Landscape)
+    // ४. PDF जनरेट करणे
     function downloadPDF() {
         const element = document.getElementById('pdfContent');
-        document.querySelector('.print-header').style.display = 'block';
-        
-        // बटणे किंवा इतर गोष्टी लपवायच्या असल्यास इथून करू शकता
         
         const opt = {
-            margin:       [10, 5, 10, 5], // टॉप, लेफ्ट, बॉटम, राईट मार्जिन
-            filename:     'BLO_Progress_Report.pdf',
+            margin:       [5, 5, 5, 5], 
+            filename:     'BLO_Progress_Report_AERO.pdf',
             image:        { type: 'jpeg', quality: 0.98 },
-            html2canvas:  { scale: 2 },
+            html2canvas:  { scale: 2, useCORS: true }, // मराठी फॉन्ट रेंडरिंग सुधारण्यासाठी
             jsPDF:        { unit: 'mm', format: 'a4', orientation: 'landscape' },
-            pagebreak:    { mode: 'css' } // पेज ब्रेकसाठी CSS वापरणे
+            pagebreak:    { mode: ['css'] } // css क्लासवरून पेज ब्रेक घेणे
         };
 
-        html2pdf().set(opt).from(element).save().then(() => {
-            // PDF डाऊनलोड झाल्यावर हेडर पुन्हा लपवणे (वेब व्ह्यूसाठी)
-            document.querySelector('.print-header').style.display = 'none';
-        });
+        html2pdf().set(opt).from(element).save();
     }
 </script>
 </body>
