@@ -13,6 +13,58 @@
     </style>
 </head>
 <body>
+
+<nav class="navbar navbar-expand-lg navbar-dark" style="background-color: #003366;">
+  <div class="container-fluid">
+    <a class="navbar-brand fw-bold" href="#">SIR वाशिम</a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarNav">
+      <ul class="navbar-nav ms-auto">
+        
+        <li class="nav-item">
+          <a class="nav-link active" href="#" onclick="showSection('dashboardSection')">🏠 मुख्य डॅशबोर्ड</a>
+        </li>
+        
+        <li class="nav-item">
+          <a class="nav-link" href="#" onclick="showSection('reportSection')">📊 प्रगती अहवाल (PDF)</a>
+        </li>
+        
+        <li class="nav-item">
+          <a class="nav-link text-warning fw-bold" href="entry.html">📝 BLO डेटा एंट्री</a>
+        </li>
+
+      </ul>
+    </div>
+  </div>
+</nav>
+
+<div id="dashboardSection">
+    </div>
+
+<div id="reportSection" style="display: none;" class="container mt-4">
+    <h4 class="text-center text-primary">BLO प्रगती अहवाल जनरेटर</h4>
+    <div class="card p-3 mt-3 shadow-sm">
+        <label class="form-label fw-bold">इलेक्शन कमिशनची Excel फाईल अपलोड करा:</label>
+        <input type="file" id="excelUpload" class="form-control" accept=".xlsx, .xls, .csv">
+        <button class="btn btn-success mt-3" onclick="generatePDF()">📄 PDF जनरेट करा आणि डाऊनलोड करा</button>
+    </div>
+    
+    <div id="tablePreview" class="mt-4"></div>
+</div>
+
+<script>
+    function showSection(sectionId) {
+        // सर्व सेक्शन लपवणे
+        document.getElementById('dashboardSection').style.display = 'none';
+        document.getElementById('reportSection').style.display = 'none';
+        
+        // जो मेनू निवडला आहे तोच दाखवणे
+        document.getElementById(sectionId).style.display = 'block';
+    }
+</script>
+    
 <div class="container mt-3">
     <h4 class="header-title">SIR नियंत्रण कक्ष, वाशिम</h4>
     
