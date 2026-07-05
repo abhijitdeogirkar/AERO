@@ -16,7 +16,6 @@
 </head>
 <body>
 
-<!-- १. नेव्हिगेशन मेनू (Navbar) -->
 <nav class="navbar navbar-expand-lg navbar-dark shadow-sm" style="background-color: #003366;">
   <div class="container-fluid">
     <a class="navbar-brand fw-bold" href="#">SIR वाशिम</a>
@@ -39,10 +38,8 @@
   </div>
 </nav>
 
-<!-- मुख्य कंटेनर -->
 <div class="container main-content">
     
-    <!-- २. मुख्य डॅशबोर्ड सेक्शन (ट्री डायग्राम) -->
     <div id="dashboardSection">
         <h4 class="header-title shadow-sm">SIR नियंत्रण कक्ष, वाशिम</h4>
         
@@ -78,7 +75,6 @@
         </div>
     </div>
 
-    <!-- ३. प्रगती अहवाल सेक्शन (सुरुवातीला लपवलेला असेल) -->
     <div id="reportSection" style="display: none;">
         <h4 class="text-center text-primary fw-bold mt-2">BLO प्रगती अहवाल जनरेटर</h4>
         <div class="card p-4 mt-3 shadow border-0" style="border-radius: 10px;">
@@ -91,7 +87,6 @@
 
 </div>
 
-<!-- Bootstrap & Custom Scripts -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script>
     // तुमची Google Apps Script URL
@@ -183,9 +178,9 @@
         return `<div class="person-card"><div><strong>${name}</strong><br><small>${subtext}</small></div><div><a href="tel:${mobile}" class="btn btn-sm btn-success contact-btn">📞</a> <a href="https://wa.me/${mobile}" class="btn btn-sm btn-outline-success contact-btn">💬</a></div></div>`;
     }
 
-    // PDF जनरेट करण्यासाठीचे फंक्शन (सध्या रिकामे ठेवले आहे)
+    // PDF जनरेट करण्यासाठीचे फंक्शन
     function generatePDF() {
-        alert("तुम्ही मला एक्सेल फाईलचे हेडर्स सांगितल्यावर आपण या फंक्शनमध्ये PDF चा कोड टाकू!");
+        alert("तुमचा डेटा मिळताच आपण इथे PDF चे लॉजिक जोडू.");
     }
 </script>
 </body>
