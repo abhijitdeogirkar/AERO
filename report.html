@@ -18,16 +18,18 @@
         
         .table-wrapper { overflow-x: auto; background: white; padding: 15px; border-radius: 8px; margin-bottom: 20px;}
         
+        /* टेबलला सुटसुटीत आणि वाचनीय बनवण्यासाठी */
         table { width: 100%; table-layout: auto; font-size: 11px; border-collapse: collapse; margin-bottom: 20px; }
         
         th, td { 
-            padding: 6px 4px !important; 
+            padding: 5px 4px !important; 
             text-align: center; 
             vertical-align: middle; 
             white-space: normal; 
             border: 1px solid #777; 
         }
         
+        /* हेडर्सचा रंग आणि फॉन्ट */
         th { background-color: #003366 !important; color: white !important; font-size: 11px; }
         
         .subtotal-row { background-color: #e9ecef !important; font-weight: bold; }
@@ -35,12 +37,13 @@
         
         #pdfContent { display: none; }
         
-        .print-header { text-align: center; margin-bottom: 12px; color: #003366; }
+        /* प्रत्येक पानावर येणारे हेडिंग */
+        .print-header { text-align: center; margin-bottom: 10px; color: #003366; }
         .print-header h3 { margin: 0; padding: 0; font-weight: bold; font-size: 18px; }
         .print-header p { margin: 5px 0 0 0; font-size: 12px; font-weight: bold; color: #333; }
         
-        /* html2pdf चा मूळ पेज-ब्रेक क्लास */
-        .html2pdf__page-break { page-break-before: always; margin-top: 20px; }
+        /* सुपरवायझरचा टेबल एकाच पानावर राहण्यासाठी */
+        .supervisor-block { page-break-inside: avoid; margin-bottom: 10px; }
     </style>
 </head>
 <body>
@@ -175,20 +178,16 @@
         let srNo = 1;
         let finalHtml = "";
 
-        // प्रत्येक सुपरवायझरचा स्वतंत्र ब्लॉक
         supervisorNames.forEach((sup, index) => {
             let supRows = groupedData[sup];
             let supTotals = Array(numericKeys.length).fill(0);
             
-            // १. पेज ब्रेक: दुसऱ्या सुपरवायझरपासून अचूकपणे पेज ब्रेक टाकणे
             if (index > 0) {
                 finalHtml += `<div class="html2pdf__page-break"></div>`;
             }
             
-            // २. हा सुपरवायझरचा ब्लॉक एकाच पानात राहावा (page-break-inside: avoid)
-            finalHtml += `<div style="page-break-inside: avoid; margin-bottom: 20px;">`;
+            finalHtml += `<div class="supervisor-block">`;
             
-            // हेडिंग
             finalHtml += `
             <div class="print-header">
                 <h3>BLO प्रगती अहवाल (AERO श्री अभिजीत देवगिरकर)</h3>
@@ -198,7 +197,6 @@
             
             finalHtml += `<table><thead><tr>`;
             
-            // हेडर्स आणि रुंदी
             headers.forEach(h => {
                 if (h === "Name of Supervisor") {
                     finalHtml += `<th style="width: 8%;">${h}</th>`;
@@ -212,7 +210,6 @@
             });
             finalHtml += `</tr></thead><tbody>`;
 
-            // डेटा भरणे
             supRows.forEach((item, rowIndex) => {
                 finalHtml += `<tr>`;
                 finalHtml += `<td>${srNo++}</td>`;
@@ -233,13 +230,11 @@
                 finalHtml += `</tr>`;
             });
 
-            // सुपरवायझरची बेरीज
             finalHtml += `<tr class="subtotal-row">`;
             finalHtml += `<td colspan="3" style="text-align:right;">${sup} (एकूण)</td>`;
             supTotals.forEach(val => finalHtml += `<td>${val}</td>`);
             finalHtml += `</tr>`;
 
-            // सर्वात शेवटी ग्रँड टोटल
             if (index === supervisorNames.length - 1) {
                 finalHtml += `<tr class="grandtotal-row">`;
                 finalHtml += `<td colspan="4" style="text-align:right;">सर्व सुपरवायझर (एकंदर बेरीज)</td>`;
@@ -247,7 +242,7 @@
                 finalHtml += `</tr>`;
             }
 
-            finalHtml += `</tbody></table></div>`;
+            finalHtml += `</tbody></table></div>`; 
         });
 
         pdfContainer.innerHTML = finalHtml;
@@ -257,16 +252,33 @@
         document.getElementById('downloadPdfBtn').style.display = 'block';
     }
 
-    // PDF डाऊनलोड 
+    // फाईलचे नाव डायनॅमिक (तारीख आणि वेळेसह) तयार करण्याची पद्धत
     function downloadPDF() {
         const element = document.getElementById('pdfContent');
+        
+        // आजची तारीख आणि वेळ मिळवणे
+        const now = new Date();
+        const d = now.getDate();
+        const m = now.getMonth() + 1;
+        const y = String(now.getFullYear()).slice(-2); // शेवटचे दोन आकडे (उदा. 26)
+        
+        let h = now.getHours();
+        let min = now.getMinutes();
+        const ampm = h >= 12 ? 'pm' : 'am';
+        h = h % 12;
+        h = h ? h : 12; // 0 वाजले असतील तर त्याला 12 करणे
+        min = min < 10 ? '0' + min : min; // मिनिटे सिंगल डिजिट असतील तर पुढे 0 लावणे
+
+        // फाईलचे नाव बनवणे (उदा. "BLO Report 5-7-26 3-45 pm.pdf")
+        const dynamicFileName = `BLO Report ${d}-${m}-${y} ${h}-${min} ${ampm}.pdf`;
+
         const opt = {
             margin:       5,
-            filename:     'BLO_Progress_Report_AERO.pdf',
+            filename:     dynamicFileName,
             image:        { type: 'jpeg', quality: 0.98 },
             html2canvas:  { scale: 2, useCORS: true },
             jsPDF:        { unit: 'mm', format: 'a4', orientation: 'landscape' },
-            pagebreak:    { mode: ['legacy'] } // क्लासवर आधारित पेज-ब्रेकसाठी
+            pagebreak:    { mode: ['css', 'legacy'] } 
         };
 
         html2pdf().set(opt).from(element).save();
