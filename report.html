@@ -5,21 +5,18 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>BLO प्रगती अहवाल - SIR वाशिम</title>
     
-    <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     
-    <!-- SheetJS (Excel वाचण्यासाठी) -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-    <!-- html2pdf (PDF बनवण्यासाठी) -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     
     <style>
-        /* अत्यंत सुस्पष्ट आणि सुरक्षित फॉन्ट (अक्षरे तुटणार नाहीत) */
+        /* संदर्भ कोडनुसार मूळ आणि सुरक्षित फॉन्ट सेटिंग */
         body { background-color: #f4f7f6; font-family: 'Arial Unicode MS', Arial, sans-serif; }
         
         .table-wrapper { overflow-x: auto; background: white; padding: 15px; border-radius: 8px; margin-bottom: 20px;}
         
-        /* दोन्ही अहवालांसाठी एकसमान (Common) CSS सेटिंग्ज */
+        /* संदर्भ कोडनुसार दोन्ही अहवालांची एकसमान टेबल रचना (सुटसुटीत आणि वाचनीय) */
         table.original-table, table.target-table { 
             width: 100%; 
             table-layout: auto; 
@@ -38,7 +35,7 @@
             border: 1px solid #777; 
         }
         
-        /* हेडर्सचे रंग: पहिला निळा, दुसरा डार्क हिरवा (फॉन्ट साईझ समान 11px) */
+        /* हेडर्सचे रंग: पहिला निळा, दुसरा डार्क हिरवा */
         table.original-table th { background-color: #003366 !important; color: white !important; font-size: 11px; }
         table.target-table th { background-color: #0b5031 !important; color: white !important; font-size: 11px; } 
         
@@ -56,7 +53,6 @@
 </head>
 <body>
 
-<!-- नेव्हिगेशन मेनू -->
 <nav class="navbar navbar-expand-lg navbar-dark shadow-sm" style="background-color: #003366;">
   <div class="container-fluid">
     <a class="navbar-brand fw-bold" href="index.html">SIR वाशिम</a>
@@ -67,7 +63,7 @@
       <ul class="navbar-nav ms-auto">
         <li class="nav-item"><a class="nav-link" href="index.html">🏠 मुख्य डॅशबोर्ड</a></li>
         <li class="nav-item"><a class="nav-link active fw-bold" href="#">📊 प्रगती अहवाल (PDF)</a></li>
-        <li class="nav-item"><a class="nav-link text-warning fw-bold" href="entry.html">📝 BLO डेटा एंट्री</a></li>
+        <li class="nav-item"><a class="nav-link text-warning fw-bold" href="entry.html">📝 BLO डेटा ENTRY</a></li>
       </ul>
     </div>
   </div>
@@ -76,7 +72,6 @@
 <div class="container-fluid mt-4">
     <h4 class="text-center text-primary fw-bold mb-4">BLO प्रगती आणि लक्षांक अहवाल</h4>
     
-    <!-- फाईल अपलोड सेक्शन -->
     <div class="row justify-content-center mb-4">
         <div class="col-md-6">
             <div class="card p-4 shadow-sm border-primary text-center">
@@ -85,7 +80,6 @@
                 
                 <div id="loadingMsg" class="text-warning fw-bold mt-2" style="display:none;">⏳ डेटा मॅच आणि कॅल्क्युलेट करत आहे...</div>
                 
-                <!-- दोन्ही अहवाल एकत्र डाऊनलोड करण्यासाठी एकच बटन -->
                 <button id="singleDownloadBtn" class="btn btn-success fw-bold w-100 mt-2" style="display:none; font-size: 15px;" onclick="downloadBothPDFs()">
                     📄 दोन्ही अहवाल एकत्र डाऊनलोड करा (२ PDF फाईल्स)
                 </button>
@@ -93,11 +87,9 @@
         </div>
     </div>
 
-    <!-- १. जुन्या रिपोर्टचा कंटेनर -->
     <h5 id="titleOriginal" class="fw-bold text-primary mt-4" style="display:none;">१. BLO प्रगती अहवाल (प्रीव्ह्यू)</h5>
     <div class="table-wrapper shadow-sm border" id="pdfContent"></div>
 
-    <!-- २. नवीन लक्षांक रिपोर्टचा कंटेनर -->
     <h5 id="titleTarget" class="fw-bold text-success mt-4" style="display:none;">२. दैनिक लक्षांक व पूर्तता अहवाल (प्रीव्ह्यू)</h5>
     <div class="table-wrapper shadow-sm border" id="targetPdfContent"></div>
 
@@ -173,7 +165,7 @@
         let supervisorNames = Object.keys(groupedData).sort((a, b) => a.localeCompare(b));
 
         // ==========================================
-        // अहवाल १: जुना BLO प्रगती अहवाल
+        // अहवाल १: जुना BLO प्रगती अहवाल (Landscape)
         // ==========================================
         const pdfContainer = document.getElementById('pdfContent');
         pdfContainer.innerHTML = ""; 
@@ -250,7 +242,7 @@
         pdfContainer.innerHTML = finalHtml1;
 
         // ==========================================
-        // अहवाल २: दैनिक लक्षांक अहवाल (१५ कॉलम्स)
+        // अहवाल २: दैनिक लक्षांक अहवाल (Landscape)
         // ==========================================
         const targetPdfContainer = document.getElementById('targetPdfContent');
         
@@ -388,25 +380,11 @@
         document.getElementById('titleTarget').style.display = 'block';
     }
 
-    // PDF जनरेट करण्याची १००% खात्रीशीर पद्धत (ज्यामध्ये कॉलम्स दबले जाणार नाहीत)
     function downloadBothPDFs() {
         const btn = document.getElementById('singleDownloadBtn');
         btn.innerText = "⏳ कृपया प्रतीक्षा करा... (दोन्ही PDF जनरेट होत आहेत)";
         btn.classList.replace('btn-success', 'btn-warning');
         btn.disabled = true;
-
-        const el1 = document.getElementById('pdfContent');
-        const el2 = document.getElementById('targetPdfContent');
-
-        // *** कायमस्वरूपी उपाय (Permanent Fix): *** 
-        // मोबाईलची स्क्रीन छोटी असल्यामुळे टेबल दबून अक्षरे एकमेकांत घुसू नयेत, 
-        // म्हणून PDF चा फोटो घेण्यापूर्वी आपण टेबलला बळजबरीने '1450px' ची जागा देत आहोत. 
-        // यामुळे अक्षरे एकदम सुटसुटीत राहतील आणि A4 पानावर परफेक्ट बसतील.
-        const origWidth1 = el1.style.width;
-        const origWidth2 = el2.style.width;
-        
-        el1.style.width = '1450px';
-        el2.style.width = '1450px';
 
         const now = new Date();
         const d = now.getDate();
@@ -424,32 +402,32 @@
         
         const originalTitle = document.title;
 
-        // दोन्ही अहवालांसाठी मूळ आणि परफेक्ट सेटिंग
-        const opt = {
+        // संदर्भ कोडप्रमाणे नॅचरल आणि सुरक्षित PDF जनरेशन सेटिंग्ज (नो एक्स्ट्रा विड्थ फोर्स)
+        const opt1 = {
             margin:       5,
+            filename:     dynamicFileName1,
             image:        { type: 'jpeg', quality: 0.98 },
             html2canvas:  { scale: 2, useCORS: true },
             jsPDF:        { unit: 'mm', format: 'a4', orientation: 'landscape' },
             pagebreak:    { mode: ['css', 'legacy'] } 
         };
 
-        // पहिला अहवाल डाऊनलोड
-        opt.filename = dynamicFileName1;
+        const opt2 = {
+            margin:       5,
+            filename:     dynamicFileName2,
+            image:        { type: 'jpeg', quality: 0.98 },
+            html2canvas:  { scale: 2, useCORS: true },
+            jsPDF:        { unit: 'mm', format: 'a4', orientation: 'landscape' },
+            pagebreak:    { mode: ['css', 'legacy'] } 
+        };
+
         document.title = dynamicFileName1.replace('.pdf', '');
-        
-        html2pdf().set(opt).from(el1).save().then(() => {
+        html2pdf().set(opt1).from(document.getElementById('pdfContent')).save().then(() => {
             
             setTimeout(() => {
-                // दुसरा अहवाल डाऊनलोड
-                opt.filename = dynamicFileName2;
                 document.title = dynamicFileName2.replace('.pdf', '');
-                
-                html2pdf().set(opt).from(el2).save().then(() => {
-                    // सर्व काम झाल्यावर टेबलला मूळ स्थितीत आणणे आणि बटन रिसेट करणे
+                html2pdf().set(opt2).from(document.getElementById('targetPdfContent')).save().then(() => {
                     document.title = originalTitle;
-                    el1.style.width = origWidth1;
-                    el2.style.width = origWidth2;
-                    
                     btn.innerText = "📄 दोन्ही अहवाल एकत्र डाऊनलोड करा (२ PDF फाईल्स)";
                     btn.classList.replace('btn-warning', 'btn-success');
                     btn.disabled = false;
