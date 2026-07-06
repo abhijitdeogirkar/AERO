@@ -16,18 +16,17 @@
     <style>
         body { background-color: #f4f7f6; font-family: 'Arial Unicode MS', Arial, sans-serif; }
         
-        /* टेबलला सुटसुटीत आणि वाचनीय बनवण्यासाठी */
         .table-wrapper { overflow-x: auto; background: white; padding: 15px; border-radius: 8px; margin-bottom: 20px;}
         
-        /* १. जुन्या अहवालाचे CSS (Landscape - पूर्ववत केले) */
+        /* १. जुन्या अहवालाचे CSS (Landscape - यात कोणताही बदल नाही) */
         table.original-table { width: 100%; table-layout: auto; font-size: 11px; border-collapse: collapse; margin-bottom: 20px; }
         table.original-table th, table.original-table td { padding: 5px 4px !important; text-align: center; vertical-align: middle; white-space: normal; border: 1px solid #777; }
         table.original-table th { background-color: #003366 !important; color: white !important; font-size: 11px; }
         
-        /* २. नवीन अहवालाचे CSS (लक्षांक अहवाल - Landscape) */
-        table.target-table { width: 100%; table-layout: auto; font-size: 10px; border-collapse: collapse; margin-bottom: 20px; }
-        table.target-table th, table.target-table td { padding: 6px 3px !important; text-align: center; vertical-align: middle; white-space: normal; border: 1px solid #777; line-height: 1.3; }
-        table.target-table th { background-color: #198754 !important; color: white !important; font-size: 9px; }
+        /* २. नवीन लक्षांक अहवालाचे CSS (डार्क हिरवा रंग आणि मोठा सुटसुटीत फॉन्ट) */
+        table.target-table { width: 100%; table-layout: auto; font-size: 11px; border-collapse: collapse; margin-bottom: 20px; }
+        table.target-table th, table.target-table td { padding: 6px 4px !important; text-align: center; vertical-align: middle; white-space: normal; border: 1px solid #777; line-height: 1.3; }
+        table.target-table th { background-color: #0b5031 !important; color: white !important; font-size: 10.5px; } /* डार्क हिरवा रंग */
         
         .subtotal-row { background-color: #e9ecef !important; font-weight: bold; }
         .grandtotal-row { background-color: #ffc107 !important; color: black !important; font-weight: bold; font-size: 12px; border-top: 2px solid #000; }
@@ -160,7 +159,7 @@
         let supervisorNames = Object.keys(groupedData).sort((a, b) => a.localeCompare(b));
 
         // ==========================================
-        // अहवाल १: जुना BLO प्रगती अहवाल
+        // अहवाल १: जुना BLO प्रगती अहवाल (मूळ स्थितीत)
         // ==========================================
         const pdfContainer = document.getElementById('pdfContent');
         pdfContainer.innerHTML = ""; 
@@ -237,7 +236,7 @@
         pdfContainer.innerHTML = finalHtml1;
 
         // ==========================================
-        // अहवाल २: दैनिक लक्षांक अहवाल 
+        // अहवाल २: दैनिक लक्षांक अहवाल (कॉलम्स मर्ज करून)
         // ==========================================
         const targetPdfContainer = document.getElementById('targetPdfContent');
         
@@ -255,40 +254,41 @@
         let remainingDays = totalCampaignDays - elapsedDays;
         if (remainingDays < 1) remainingDays = 1; 
 
+        // युझरच्या सूचनेनुसार १५ कॉलम्स (वाटप आणि डिजि. लक्षांक एकत्र केले)
         const headers2 = [
             "अ. क्र.", "पर्यवेक्षक", "BLO नांव", "भाग क्र.", "एकूण मतदार",
-            "EF वाटप दैनिक लक्षांक", "EF डिजि. दैनिक लक्षांक",
-            "EF अपेक्षित वाटप", "EF अपेक्षित डिजि.",
-            "EF प्रत्यक्ष वाटप", "EF प्रत्यक्ष डिजि.",
-            "दैन. वाटप पूर्तता %", "दैन. डिजि. पूर्तता %",
-            "एकुण वाटप पूर्तता %", "एकुण डिजि. पूर्तता %",
-            "New 🎯 वाटप/दिवस", "New 🎯 डिजि./दिवस"
+            "EF वाटप व डिजिटिझेशन दैनिक लक्षांक", 
+            "EF आज अखेर अपेक्षित वाटप व डिजिटिझेशन",
+            "EF प्रत्यक्ष वाटप", "EF प्रत्यक्ष डिजिटिझेशन",
+            "EF दैनिक वाटप लक्षांक पूर्तता %", "EF दैनिक डिजिटिझेशन लक्षांक पूर्तता %",
+            "EF प्रत्यक्ष वाटप पूर्तता %", "EF प्रत्यक्ष डिजिटिझेशन %",
+            "New Target 🎯 EF वाटप/दिवस", "New Target 🎯 EF डिजिटिझेशन/दिवस"
         ];
 
-        let grandTotals2 = Array(13).fill(0); 
+        let grandTotals2 = Array(11).fill(0); // १५ कॉलम्स - ४ सुरुवातीचे = ११ आकडेवारीचे कॉलम्स
         let srNo2 = 1;
         let finalHtml2 = "";
 
         supervisorNames.forEach((sup, index) => {
             let supRows = groupedData[sup];
-            let supTotals2 = Array(13).fill(0);
+            let supTotals2 = Array(11).fill(0);
             
             if (index > 0) finalHtml2 += `<div class="html2pdf__page-break"></div>`;
             finalHtml2 += `<div class="supervisor-block">`;
             
             finalHtml2 += `
-            <div class="print-header">
+            <div class="print-header" style="color: #0b5031;">
                 <h3>SIR दैनिक लक्षांक व प्रगती अहवाल (AERO श्री अभिजीत देवगिरकर)</h3>
                 <p>${reportDateStr} | मोहिमेचे दिवस: ${totalCampaignDays} | झालेले: ${elapsedDays} | उर्वरित: ${remainingDays}</p>
-                <hr style="border: 1px solid #198754; margin-top: 8px; margin-bottom: 8px;">
+                <hr style="border: 1px solid #0b5031; margin-top: 8px; margin-bottom: 8px;">
             </div>`;
             
             finalHtml2 += `<table class="target-table"><thead><tr>`;
             
             headers2.forEach(h => {
-                if (h === "पर्यवेक्षक") finalHtml2 += `<th style="width: 7%;">${h}</th>`;
-                else if (h === "BLO नांव") finalHtml2 += `<th style="width: 12%;">${h}</th>`;
-                else if (h === "अ. क्र." || h === "भाग क्र.") finalHtml2 += `<th style="width: 3.5%;">${h}</th>`;
+                if (h === "पर्यवेक्षक") finalHtml2 += `<th style="width: 8%;">${h}</th>`;
+                else if (h === "BLO नांव") finalHtml2 += `<th style="width: 14%;">${h}</th>`;
+                else if (h === "अ. क्र." || h === "भाग क्र.") finalHtml2 += `<th style="width: 4%;">${h}</th>`;
                 else finalHtml2 += `<th>${h}</th>`; 
             });
             finalHtml2 += `</tr></thead><tbody>`;
@@ -298,13 +298,12 @@
                 let actualDist = parseInt(item.data["Total EFs Distributed"]) || 0;
                 let actualDigi = parseInt(item.data["Total EFs Digitized"]) || 0;
 
-                let dailyTargetDist = Math.round(totalElector / totalCampaignDays);
-                let dailyTargetDigi = Math.round(totalElector / totalCampaignDays);
-                let expectedDistToday = dailyTargetDist * elapsedDays;
-                let expectedDigiToday = dailyTargetDigi * elapsedDays;
+                // वाटप आणि डिजि. दोघांसाठी लक्षांक समान आहे
+                let dailyTarget = Math.round(totalElector / totalCampaignDays);
+                let expectedToday = dailyTarget * elapsedDays;
 
-                let dailyDistPerc = expectedDistToday ? ((actualDist / expectedDistToday) * 100) : 0;
-                let dailyDigiPerc = expectedDigiToday ? ((actualDigi / expectedDigiToday) * 100) : 0;
+                let dailyDistPerc = expectedToday ? ((actualDist / expectedToday) * 100) : 0;
+                let dailyDigiPerc = expectedToday ? ((actualDigi / expectedToday) * 100) : 0;
                 let totalDistPerc = totalElector ? ((actualDist / totalElector) * 100) : 0;
                 let totalDigiPerc = totalElector ? ((actualDigi / totalElector) * 100) : 0;
 
@@ -313,9 +312,11 @@
                 let newTargetDist = Math.ceil(remDist / remainingDays);
                 let newTargetDigi = Math.ceil(remDigi / remainingDays);
 
+                // एकूण ११ आकडेवारी
                 let rowMetrics = [
-                    totalElector, dailyTargetDist, dailyTargetDigi, expectedDistToday, expectedDigiToday,
-                    actualDist, actualDigi, dailyDistPerc, dailyDigiPerc, totalDistPerc, totalDigiPerc,
+                    totalElector, dailyTarget, expectedToday,
+                    actualDist, actualDigi, 
+                    dailyDistPerc, dailyDigiPerc, totalDistPerc, totalDigiPerc,
                     newTargetDist, newTargetDigi
                 ];
 
@@ -325,10 +326,12 @@
                 finalHtml2 += `<td style="text-align: left;">${item.bloName}</td><td>${item.partNo}</td>`;
                 
                 rowMetrics.forEach((val, kIndex) => {
-                    if(kIndex >= 7 && kIndex <= 10) finalHtml2 += `<td><b>${val.toFixed(0)}%</b></td>`; 
+                    // टक्केवारी ५, ६, ७, ८ इंडेक्सवर आहे
+                    if(kIndex >= 5 && kIndex <= 8) finalHtml2 += `<td><b>${val.toFixed(0)}%</b></td>`; 
                     else finalHtml2 += `<td>${val}</td>`;
                     
-                    if(kIndex < 7 || kIndex > 10) {
+                    // बेरजेसाठी मूळ आकडे साठवणे
+                    if(kIndex < 5 || kIndex > 8) {
                         supTotals2[kIndex] += val;
                         grandTotals2[kIndex] += val;
                     }
@@ -336,27 +339,29 @@
                 finalHtml2 += `</tr>`;
             });
 
-            supTotals2[7] = supTotals2[3] ? ((supTotals2[5] / supTotals2[3]) * 100) : 0;
-            supTotals2[8] = supTotals2[4] ? ((supTotals2[6] / supTotals2[4]) * 100) : 0;
-            supTotals2[9] = supTotals2[0] ? ((supTotals2[5] / supTotals2[0]) * 100) : 0;
-            supTotals2[10] = supTotals2[0] ? ((supTotals2[6] / supTotals2[0]) * 100) : 0;
+            // सुपरवायझर सब-टोटल टक्केवारी कॅल्क्युलेट करणे
+            supTotals2[5] = supTotals2[2] ? ((supTotals2[3] / supTotals2[2]) * 100) : 0;
+            supTotals2[6] = supTotals2[2] ? ((supTotals2[4] / supTotals2[2]) * 100) : 0;
+            supTotals2[7] = supTotals2[0] ? ((supTotals2[3] / supTotals2[0]) * 100) : 0;
+            supTotals2[8] = supTotals2[0] ? ((supTotals2[4] / supTotals2[0]) * 100) : 0;
 
             finalHtml2 += `<tr class="subtotal-row"><td colspan="4" style="text-align:right;">${sup} (एकूण)</td>`;
             supTotals2.forEach((val, idx) => {
-                if(idx >= 7 && idx <= 10) finalHtml2 += `<td>${val.toFixed(0)}%</td>`;
+                if(idx >= 5 && idx <= 8) finalHtml2 += `<td>${val.toFixed(0)}%</td>`;
                 else finalHtml2 += `<td>${val}</td>`;
             });
             finalHtml2 += `</tr>`;
 
             if (index === supervisorNames.length - 1) {
-                grandTotals2[7] = grandTotals2[3] ? ((grandTotals2[5] / grandTotals2[3]) * 100) : 0;
-                grandTotals2[8] = grandTotals2[4] ? ((grandTotals2[6] / grandTotals2[4]) * 100) : 0;
-                grandTotals2[9] = grandTotals2[0] ? ((grandTotals2[5] / grandTotals2[0]) * 100) : 0;
-                grandTotals2[10] = grandTotals2[0] ? ((grandTotals2[6] / grandTotals2[0]) * 100) : 0;
+                // ग्रँड टोटल टक्केवारी कॅल्क्युलेट करणे
+                grandTotals2[5] = grandTotals2[2] ? ((grandTotals2[3] / grandTotals2[2]) * 100) : 0;
+                grandTotals2[6] = grandTotals2[2] ? ((grandTotals2[4] / grandTotals2[2]) * 100) : 0;
+                grandTotals2[7] = grandTotals2[0] ? ((grandTotals2[3] / grandTotals2[0]) * 100) : 0;
+                grandTotals2[8] = grandTotals2[0] ? ((grandTotals2[4] / grandTotals2[0]) * 100) : 0;
 
                 finalHtml2 += `<tr class="grandtotal-row"><td colspan="4" style="text-align:right;">सर्व सुपरवायझर (एकंदर बेरीज)</td>`;
                 grandTotals2.forEach((val, idx) => {
-                    if(idx >= 7 && idx <= 10) finalHtml2 += `<td>${val.toFixed(0)}%</td>`;
+                    if(idx >= 5 && idx <= 8) finalHtml2 += `<td>${val.toFixed(0)}%</td>`;
                     else finalHtml2 += `<td>${val}</td>`;
                 });
                 finalHtml2 += `</tr>`;
@@ -402,22 +407,22 @@
         
         const originalTitle = document.title;
 
-        // पहिला अहवाल (BLO Report) - मूळ, जुन्या सेटिंग्ज 
+        // पहिला अहवाल (BLO Report) - मूळ सेटिंग, यात windowWidth लावले नाही
         const opt1 = {
             margin:       5,
             filename:     dynamicFileName1,
             image:        { type: 'jpeg', quality: 0.98 },
-            html2canvas:  { scale: 2, useCORS: true }, // NO windowWidth for report 1
+            html2canvas:  { scale: 2, useCORS: true },
             jsPDF:        { unit: 'mm', format: 'a4', orientation: 'landscape' },
             pagebreak:    { mode: ['css', 'legacy'] } 
         };
 
-        // दुसरा अहवाल (Target Report) - १७ कॉलम्स असल्यामुळे windowWidth ची गरज
+        // दुसरा अहवाल (Target Report) - यासाठी windowWidth 1400 ठेवले आहे जेणेकरून अहवाल PDF मध्ये कट होणार नाही
         const opt2 = {
             margin:       5,
             filename:     dynamicFileName2,
             image:        { type: 'jpeg', quality: 0.98 },
-            html2canvas:  { scale: 2, useCORS: true, windowWidth: 1400 }, // ONLY for report 2
+            html2canvas:  { scale: 2, useCORS: true, windowWidth: 1400 },
             jsPDF:        { unit: 'mm', format: 'a4', orientation: 'landscape' },
             pagebreak:    { mode: ['css', 'legacy'] } 
         };
