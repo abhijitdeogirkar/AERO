@@ -18,18 +18,18 @@
         
         .table-wrapper { overflow-x: auto; background: white; padding: 15px; border-radius: 8px; margin-bottom: 20px;}
         
-        /* १. जुन्या अहवालाचे CSS (Landscape) - यात कोणताही बदल नाही */
+        /* १. जुन्या अहवालाचे CSS (Landscape) */
         table.original-table { width: 100%; table-layout: auto; font-size: 11px; border-collapse: collapse; margin-bottom: 20px; }
         table.original-table th, table.original-table td { padding: 5px 4px !important; text-align: center; vertical-align: middle; white-space: normal; border: 1px solid #777; }
         table.original-table th { background-color: #003366 !important; color: white !important; font-size: 11px; }
         
-        /* २. नवीन अहवालाचे CSS (Portrait) - १७ कॉलम्स बसवण्यासाठी कॉम्पॅक्ट डिझाईन */
-        table.target-table { width: 100%; table-layout: fixed; font-size: 8px; border-collapse: collapse; margin-bottom: 20px; }
-        table.target-table th, table.target-table td { padding: 4px 2px !important; text-align: center; vertical-align: middle; white-space: normal; word-wrap: break-word; border: 1px solid #777; line-height: 1.1; }
-        table.target-table th { background-color: #198754 !important; color: white !important; font-size: 8px; }
+        /* २. नवीन अहवालाचे CSS (आता हे पण Landscape साठी मोठे केले आहे) */
+        table.target-table { width: 100%; table-layout: auto; font-size: 10px; border-collapse: collapse; margin-bottom: 20px; }
+        table.target-table th, table.target-table td { padding: 5px 3px !important; text-align: center; vertical-align: middle; white-space: normal; border: 1px solid #777; line-height: 1.2; }
+        table.target-table th { background-color: #198754 !important; color: white !important; font-size: 10px; }
         
         .subtotal-row { background-color: #e9ecef !important; font-weight: bold; }
-        .grandtotal-row { background-color: #ffc107 !important; color: black !important; font-weight: bold; font-size: 11px; border-top: 2px solid #000; }
+        .grandtotal-row { background-color: #ffc107 !important; color: black !important; font-weight: bold; font-size: 12px; border-top: 2px solid #000; }
         
         #pdfContent, #targetPdfContent { display: none; }
         
@@ -71,15 +71,10 @@
                 
                 <div id="loadingMsg" class="text-warning fw-bold mt-2" style="display:none;">⏳ डेटा मॅच आणि कॅल्क्युलेट करत आहे...</div>
                 
-                <!-- दोन्ही अहवाल डाऊनलोड करण्यासाठी बटणे -->
-                <div id="actionButtons" style="display:none;" class="d-flex flex-column gap-2 mt-3">
-                    <button class="btn btn-primary fw-bold" onclick="downloadPDF()">
-                        📄 BLO प्रगती अहवाल (A4 Landscape)
-                    </button>
-                    <button class="btn btn-success fw-bold" onclick="downloadTargetPDF()">
-                        🎯 दैनिक लक्षांक व पूर्तता अहवाल (A4 Portrait)
-                    </button>
-                </div>
+                <!-- दोन्ही अहवाल एकत्र डाऊनलोड करण्यासाठी एकच बटन -->
+                <button id="singleDownloadBtn" class="btn btn-success fw-bold w-100 mt-2" style="display:none; font-size: 15px;" onclick="downloadBothPDFs()">
+                    📄 दोन्ही अहवाल एकत्र डाऊनलोड करा (२ PDF फाईल्स)
+                </button>
             </div>
         </div>
     </div>
@@ -105,7 +100,7 @@
             .then(data => buildMapping(data))
             .catch(error => alert('Hierarchy डेटा लोड करताना त्रुटी आली!'));
             
-        reportDateStr = "अहवाल दिनांक व वेळ: " + new Date().toLocaleString('en-IN');
+        reportDateStr = "अहवाल दिनांक व वेळ: " + new Date().toLocaleString('en-IN', { hour12: true, year: 'numeric', month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' });
     });
 
     function buildMapping(contacts) {
@@ -121,7 +116,7 @@
         if (!file) return;
 
         document.getElementById('loadingMsg').style.display = 'block';
-        document.getElementById('actionButtons').style.display = 'none';
+        document.getElementById('singleDownloadBtn').style.display = 'none';
         
         const reader = new FileReader();
         reader.onload = function(event) {
@@ -240,24 +235,23 @@
         pdfContainer.innerHTML = finalHtml1;
 
         // ==========================================
-        // अहवाल २: नवीन दैनिक लक्षांक अहवाल (Portrait)
+        // अहवाल २: नवीन दैनिक लक्षांक अहवाल (आता Landscape)
         // ==========================================
         const targetPdfContainer = document.getElementById('targetPdfContent');
         
-        // तारखांचे कॅल्क्युलेशन (Start: 30 June, End: 25 July)
         let today = new Date();
         let startDate = new Date(2026, 5, 30); // June 30
         let endDate = new Date(2026, 6, 25);   // July 25
         
         today.setHours(0,0,0,0); startDate.setHours(0,0,0,0); endDate.setHours(0,0,0,0);
         
-        let totalCampaignDays = 26; // 30 June to 25 July
+        let totalCampaignDays = 26; 
         let elapsedDays = Math.round((today - startDate) / (1000 * 60 * 60 * 24)) + 1;
         if (elapsedDays < 1) elapsedDays = 1;
         if (elapsedDays > totalCampaignDays) elapsedDays = totalCampaignDays;
         
         let remainingDays = totalCampaignDays - elapsedDays;
-        if (remainingDays < 1) remainingDays = 1; // Divide by zero टाळण्यासाठी
+        if (remainingDays < 1) remainingDays = 1; 
 
         const headers2 = [
             "अ. क्र.", "पर्यवेक्षक", "BLO नांव", "भाग क्र.", "एकूण मतदार",
@@ -269,7 +263,7 @@
             "New 🎯 वाटप/दीन", "New 🎯 डिजी./दीन"
         ];
 
-        let grandTotals2 = Array(13).fill(0); // 13 numeric metrics
+        let grandTotals2 = Array(13).fill(0); 
         let srNo2 = 1;
         let finalHtml2 = "";
 
@@ -288,9 +282,11 @@
             </div>`;
             
             finalHtml2 += `<table class="target-table"><thead><tr>`;
+            
+            // लँडस्केप असल्यामुळे कॉलम्स व्यवस्थित सेट होतील
             headers2.forEach(h => {
-                if (h === "पर्यवेक्षक") finalHtml2 += `<th style="width: 7%;">${h}</th>`;
-                else if (h === "BLO नांव") finalHtml2 += `<th style="width: 10%;">${h}</th>`;
+                if (h === "पर्यवेक्षक") finalHtml2 += `<th style="width: 8%;">${h}</th>`;
+                else if (h === "BLO नांव") finalHtml2 += `<th style="width: 12%;">${h}</th>`;
                 else if (h === "अ. क्र." || h === "भाग क्र.") finalHtml2 += `<th style="width: 3%;">${h}</th>`;
                 else finalHtml2 += `<th>${h}</th>`;
             });
@@ -301,7 +297,6 @@
                 let actualDist = parseInt(item.data["Total EFs Distributed"]) || 0;
                 let actualDigi = parseInt(item.data["Total EFs Digitized"]) || 0;
 
-                // गणिते (Math)
                 let dailyTargetDist = Math.round(totalElector / totalCampaignDays);
                 let dailyTargetDigi = Math.round(totalElector / totalCampaignDays);
                 let expectedDistToday = dailyTargetDist * elapsedDays;
@@ -329,10 +324,9 @@
                 finalHtml2 += `<td style="text-align: left;">${item.bloName}</td><td>${item.partNo}</td>`;
                 
                 rowMetrics.forEach((val, kIndex) => {
-                    if(kIndex >= 7 && kIndex <= 10) finalHtml2 += `<td><b>${val.toFixed(0)}%</b></td>`; // Percentages
+                    if(kIndex >= 7 && kIndex <= 10) finalHtml2 += `<td><b>${val.toFixed(0)}%</b></td>`; 
                     else finalHtml2 += `<td>${val}</td>`;
                     
-                    // Add raw values to totals
                     if(kIndex < 7 || kIndex > 10) {
                         supTotals2[kIndex] += val;
                         grandTotals2[kIndex] += val;
@@ -341,7 +335,6 @@
                 finalHtml2 += `</tr>`;
             });
 
-            // सुपरवायझर सब-टोटल (टक्केवारी पुन्हा कॅल्क्युलेट करणे)
             supTotals2[7] = supTotals2[3] ? ((supTotals2[5] / supTotals2[3]) * 100) : 0;
             supTotals2[8] = supTotals2[4] ? ((supTotals2[6] / supTotals2[4]) * 100) : 0;
             supTotals2[9] = supTotals2[0] ? ((supTotals2[5] / supTotals2[0]) * 100) : 0;
@@ -354,7 +347,6 @@
             });
             finalHtml2 += `</tr>`;
 
-            // एकंदर बेरीज (Grand Total)
             if (index === supervisorNames.length - 1) {
                 grandTotals2[7] = grandTotals2[3] ? ((grandTotals2[5] / grandTotals2[3]) * 100) : 0;
                 grandTotals2[8] = grandTotals2[4] ? ((grandTotals2[6] / grandTotals2[4]) * 100) : 0;
@@ -372,17 +364,22 @@
         });
         targetPdfContainer.innerHTML = finalHtml2;
         
-        // UI दाखवणे
         document.getElementById('loadingMsg').style.display = 'none';
-        document.getElementById('actionButtons').style.display = 'flex';
+        document.getElementById('singleDownloadBtn').style.display = 'block';
         pdfContainer.style.display = 'block';
         document.getElementById('titleOriginal').style.display = 'block';
         targetPdfContainer.style.display = 'block';
         document.getElementById('titleTarget').style.display = 'block';
     }
 
-    // फाईलचे नाव (वेळेसह) मिळवणारे कॉमन फंक्शन
-    function getDynamicFileName(prefix) {
+    // एकाच बटनावर क्लिक केल्यास दोन्ही PDF एकामागोमाग डाऊनलोड करण्यासाठीचे फंक्शन
+    function downloadBothPDFs() {
+        const btn = document.getElementById('singleDownloadBtn');
+        btn.innerText = "⏳ कृपया प्रतीक्षा करा... (दोन्ही PDF जनरेट होत आहेत)";
+        btn.classList.replace('btn-success', 'btn-warning');
+        btn.disabled = true;
+
+        // दोन्ही फाईल्ससाठी एकच वेळ (Timestamp) निश्चित करणे
         const now = new Date();
         const d = now.getDate();
         const m = now.getMonth() + 1;
@@ -392,45 +389,50 @@
         const ampm = h >= 12 ? 'pm' : 'am';
         h = h % 12; h = h ? h : 12; 
         min = min < 10 ? '0' + min : min; 
-        return `${prefix} ${d}-${m}-${y} ${h}.${min} ${ampm}.pdf`;
-    }
+        const timeStr = `${d}-${m}-${y} ${h}.${min} ${ampm}`;
 
-    // १. जुना प्रगती अहवाल (Landscape) डाऊनलोड करणे
-    function downloadPDF() {
-        const element = document.getElementById('pdfContent');
-        const dynamicFileName = getDynamicFileName("BLO Report");
+        const dynamicFileName1 = `BLO Report ${timeStr}.pdf`;
+        const dynamicFileName2 = `🎯 लक्षक पूर्तता ${timeStr}.pdf`;
+        
         const originalTitle = document.title;
-        document.title = dynamicFileName.replace('.pdf', '');
 
-        const opt = {
+        // पहिला अहवाल (BLO Report) - Landscape
+        const opt1 = {
             margin:       5,
-            filename:     dynamicFileName,
+            filename:     dynamicFileName1,
             image:        { type: 'jpeg', quality: 0.98 },
             html2canvas:  { scale: 2, useCORS: true },
-            jsPDF:        { unit: 'mm', format: 'a4', orientation: 'landscape' }, // Landscape!
+            jsPDF:        { unit: 'mm', format: 'a4', orientation: 'landscape' },
             pagebreak:    { mode: ['css', 'legacy'] } 
         };
 
-        html2pdf().set(opt).from(element).save().then(() => { document.title = originalTitle; });
-    }
-
-    // २. नवीन लक्षांक अहवाल (Portrait) डाऊनलोड करणे
-    function downloadTargetPDF() {
-        const element = document.getElementById('targetPdfContent');
-        const dynamicFileName = getDynamicFileName("Target Report");
-        const originalTitle = document.title;
-        document.title = dynamicFileName.replace('.pdf', '');
-
-        const opt = {
+        // दुसरा अहवाल (Target Report) - आता हा पण Landscape आहे
+        const opt2 = {
             margin:       5,
-            filename:     dynamicFileName,
+            filename:     dynamicFileName2,
             image:        { type: 'jpeg', quality: 0.98 },
             html2canvas:  { scale: 2, useCORS: true },
-            jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }, // Portrait!
+            jsPDF:        { unit: 'mm', format: 'a4', orientation: 'landscape' },
             pagebreak:    { mode: ['css', 'legacy'] } 
         };
 
-        html2pdf().set(opt).from(element).save().then(() => { document.title = originalTitle; });
+        // पहिली फाईल डाऊनलोड करणे सुरू करा
+        document.title = dynamicFileName1.replace('.pdf', '');
+        html2pdf().set(opt1).from(document.getElementById('pdfContent')).save().then(() => {
+            
+            // पहिली फाईल जनरेट झाल्यावर १ सेकंदाने दुसरी फाईल डाऊनलोड करणे
+            setTimeout(() => {
+                document.title = dynamicFileName2.replace('.pdf', '');
+                html2pdf().set(opt2).from(document.getElementById('targetPdfContent')).save().then(() => {
+                    // दोन्ही डाऊनलोड पूर्ण झाल्यावर टायटल आणि बटन मूळ स्थितीत आणणे
+                    document.title = originalTitle;
+                    btn.innerText = "📄 दोन्ही अहवाल एकत्र डाऊनलोड करा (२ PDF फाईल्स)";
+                    btn.classList.replace('btn-warning', 'btn-success');
+                    btn.disabled = false;
+                });
+            }, 1000);
+            
+        });
     }
 </script>
 </body>
