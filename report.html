@@ -8,13 +8,19 @@
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     
+    <!-- Google Fonts: सुंदर मराठी फॉन्टसाठी -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Devanagari:wght@400;600;700&display=swap" rel="stylesheet">
+    
     <!-- SheetJS (Excel वाचण्यासाठी) -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <!-- html2pdf (PDF बनवण्यासाठी) -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     
     <style>
-        body { background-color: #f4f7f6; font-family: 'Arial Unicode MS', Arial, sans-serif; }
+        /* फॉन्ट सेटिंग दुरुस्त केली */
+        body { background-color: #f4f7f6; font-family: 'Noto Sans Devanagari', 'Arial Unicode MS', Mangal, sans-serif; }
         
         .table-wrapper { overflow-x: auto; background: white; padding: 15px; border-radius: 8px; margin-bottom: 20px;}
         
@@ -172,7 +178,7 @@
         let supervisorNames = Object.keys(groupedData).sort((a, b) => a.localeCompare(b));
 
         // ==========================================
-        // अहवाल १: जुना BLO प्रगती अहवाल (मूळ स्थितीत)
+        // अहवाल १: जुना BLO प्रगती अहवाल 
         // ==========================================
         const pdfContainer = document.getElementById('pdfContent');
         pdfContainer.innerHTML = ""; 
@@ -267,8 +273,6 @@
         let remainingDays = totalCampaignDays - elapsedDays;
         if (remainingDays < 1) remainingDays = 1; 
 
-        // कॉलम रुंदी योग्य राहण्यासाठी आणि मजकूर न तुटण्यासाठी <br> लावून हेडर्स दिले आहेत. 
-        // हे दिसायलाही चांगले दिसतील आणि जागाही वाचवतील.
         const headers2 = [
             "अ. क्र.", "पर्यवेक्षक", "BLO नांव", "भाग क्र.", "एकूण<br>मतदार",
             "EF वाटप व डिजि.<br>दैनिक लक्षांक", 
@@ -299,7 +303,6 @@
             
             finalHtml2 += `<table class="target-table"><thead><tr>`;
             
-            // पहिल्या अहवालासारखीच रुंदी (Width) सेट केली आहे
             headers2.forEach(h => {
                 if (h === "पर्यवेक्षक") finalHtml2 += `<th style="width: 8%;">${h}</th>`;
                 else if (h === "BLO नांव") finalHtml2 += `<th style="width: 14%;">${h}</th>`;
@@ -412,7 +415,6 @@
         
         const originalTitle = document.title;
 
-        // दोन्ही अहवालांसाठी आता १००% समान PDF जनरेशन सेटिंग्ज 
         const opt1 = {
             margin:       5,
             filename:     dynamicFileName1,
