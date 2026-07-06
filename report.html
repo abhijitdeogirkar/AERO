@@ -5,9 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>BLO प्रगती अहवाल - SIR वाशिम</title>
     
+    <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     
+    <!-- SheetJS (Excel वाचण्यासाठी) -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <!-- html2pdf (PDF बनवण्यासाठी) -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     
     <style>
@@ -15,36 +18,31 @@
         
         .table-wrapper { overflow-x: auto; background: white; padding: 15px; border-radius: 8px; margin-bottom: 20px;}
         
-        /* टेबलला सुटसुटीत आणि वाचनीय बनवण्यासाठी */
-        table { width: 100%; table-layout: auto; font-size: 11px; border-collapse: collapse; margin-bottom: 20px; }
+        /* १. जुन्या अहवालाचे CSS (Landscape) - यात कोणताही बदल नाही */
+        table.original-table { width: 100%; table-layout: auto; font-size: 11px; border-collapse: collapse; margin-bottom: 20px; }
+        table.original-table th, table.original-table td { padding: 5px 4px !important; text-align: center; vertical-align: middle; white-space: normal; border: 1px solid #777; }
+        table.original-table th { background-color: #003366 !important; color: white !important; font-size: 11px; }
         
-        th, td { 
-            padding: 5px 4px !important; 
-            text-align: center; 
-            vertical-align: middle; 
-            white-space: normal; 
-            border: 1px solid #777; 
-        }
-        
-        /* हेडर्सचा रंग आणि फॉन्ट */
-        th { background-color: #003366 !important; color: white !important; font-size: 11px; }
+        /* २. नवीन अहवालाचे CSS (Portrait) - १७ कॉलम्स बसवण्यासाठी कॉम्पॅक्ट डिझाईन */
+        table.target-table { width: 100%; table-layout: fixed; font-size: 8px; border-collapse: collapse; margin-bottom: 20px; }
+        table.target-table th, table.target-table td { padding: 4px 2px !important; text-align: center; vertical-align: middle; white-space: normal; word-wrap: break-word; border: 1px solid #777; line-height: 1.1; }
+        table.target-table th { background-color: #198754 !important; color: white !important; font-size: 8px; }
         
         .subtotal-row { background-color: #e9ecef !important; font-weight: bold; }
-        .grandtotal-row { background-color: #ffc107 !important; color: black !important; font-weight: bold; font-size: 12px; border-top: 2px solid #000; }
+        .grandtotal-row { background-color: #ffc107 !important; color: black !important; font-weight: bold; font-size: 11px; border-top: 2px solid #000; }
         
-        #pdfContent { display: none; }
+        #pdfContent, #targetPdfContent { display: none; }
         
-        /* प्रत्येक पानावर येणारे हेडिंग */
         .print-header { text-align: center; margin-bottom: 10px; color: #003366; }
-        .print-header h3 { margin: 0; padding: 0; font-weight: bold; font-size: 18px; }
-        .print-header p { margin: 5px 0 0 0; font-size: 12px; font-weight: bold; color: #333; }
+        .print-header h3 { margin: 0; padding: 0; font-weight: bold; font-size: 17px; }
+        .print-header p { margin: 5px 0 0 0; font-size: 11px; font-weight: bold; color: #333; }
         
-        /* सुपरवायझरचा टेबल एकाच पानावर राहण्यासाठी */
         .supervisor-block { page-break-inside: avoid; margin-bottom: 10px; }
     </style>
 </head>
 <body>
 
+<!-- नेव्हिगेशन मेनू -->
 <nav class="navbar navbar-expand-lg navbar-dark shadow-sm" style="background-color: #003366;">
   <div class="container-fluid">
     <a class="navbar-brand fw-bold" href="index.html">SIR वाशिम</a>
@@ -62,8 +60,9 @@
 </nav>
 
 <div class="container-fluid mt-4">
-    <h4 class="text-center text-primary fw-bold mb-4">BLO प्रगती अहवाल जनरेटर</h4>
+    <h4 class="text-center text-primary fw-bold mb-4">BLO प्रगती आणि लक्षांक अहवाल</h4>
     
+    <!-- फाईल अपलोड सेक्शन -->
     <div class="row justify-content-center mb-4">
         <div class="col-md-6">
             <div class="card p-4 shadow-sm border-primary text-center">
@@ -72,14 +71,27 @@
                 
                 <div id="loadingMsg" class="text-warning fw-bold mt-2" style="display:none;">⏳ डेटा मॅच आणि कॅल्क्युलेट करत आहे...</div>
                 
-                <button id="downloadPdfBtn" class="btn btn-danger fw-bold w-100" style="display:none;" onclick="downloadPDF()">
-                    📄 PDF जनरेट करा आणि डाऊनलोड करा
-                </button>
+                <!-- दोन्ही अहवाल डाऊनलोड करण्यासाठी बटणे -->
+                <div id="actionButtons" style="display:none;" class="d-flex flex-column gap-2 mt-3">
+                    <button class="btn btn-primary fw-bold" onclick="downloadPDF()">
+                        📄 BLO प्रगती अहवाल (A4 Landscape)
+                    </button>
+                    <button class="btn btn-success fw-bold" onclick="downloadTargetPDF()">
+                        🎯 दैनिक लक्षांक व पूर्तता अहवाल (A4 Portrait)
+                    </button>
+                </div>
             </div>
         </div>
     </div>
 
+    <!-- १. जुन्या रिपोर्टचा कंटेनर -->
+    <h5 id="titleOriginal" class="fw-bold text-primary mt-4" style="display:none;">१. BLO प्रगती अहवाल (प्रीव्ह्यू)</h5>
     <div class="table-wrapper shadow-sm border" id="pdfContent"></div>
+
+    <!-- २. नवीन लक्षांक रिपोर्टचा कंटेनर -->
+    <h5 id="titleTarget" class="fw-bold text-success mt-4" style="display:none;">२. दैनिक लक्षांक व पूर्तता अहवाल (प्रीव्ह्यू)</h5>
+    <div class="table-wrapper shadow-sm border" id="targetPdfContent"></div>
+
 </div>
 
 <script>
@@ -109,7 +121,7 @@
         if (!file) return;
 
         document.getElementById('loadingMsg').style.display = 'block';
-        document.getElementById('downloadPdfBtn').style.display = 'none';
+        document.getElementById('actionButtons').style.display = 'none';
         
         const reader = new FileReader();
         reader.onload = function(event) {
@@ -117,30 +129,12 @@
             const workbook = XLSX.read(data, {type: 'array'});
             const firstSheetName = workbook.SheetNames[0];
             const excelJson = XLSX.utils.sheet_to_json(workbook.Sheets[firstSheetName]);
-            generateReport(excelJson);
+            generateBothReports(excelJson);
         };
         reader.readAsArrayBuffer(file);
     });
 
-    function generateReport(excelData) {
-        const pdfContainer = document.getElementById('pdfContent');
-        pdfContainer.innerHTML = ""; 
-
-        const headers = [
-            "Sr. No", "Name of Supervisor", "Name of BLO", "Part Number", 
-            "Total Elector", "Total EFs Distributed", "Total EFs Digitized", 
-            "EFs Submitted (Not verified)", "EFs Verified by BLO", "Mapped as Progeny", 
-            "Mapped as Self", "No Mapping", "UEF Death", "UEF Permanent Shifting", 
-            "UEF Already Enrolled", "UEF Absent", "UEF Others", "Total UEF"
-        ];
-
-        const numericKeys = [
-            "Total Elector", "Total EFs Distributed", "Total EFs Digitized", 
-            "EFs Submitted by Elector ( Not verified by BLO)", "EFs Verified by BLO", 
-            "Mapped as Progeny", "Mapped as Self", "No Mapping", "UEF Death", 
-            "UEF Permanent Shifting", "UEF Already Enrolled", "UEF Absent", "UEF Others", "Total UEF"
-        ];
-
+    function generateBothReports(excelData) {
         let matchedRows = [];
         excelData.forEach(row => {
             let partNo = String(row["Part Number"]).trim();
@@ -168,102 +162,243 @@
 
         let supervisorNames = Object.keys(groupedData).sort((a, b) => a.localeCompare(b));
 
-        let grandTotals = Array(numericKeys.length).fill(0);
-        let srNo = 1;
-        let finalHtml = "";
+        // ==========================================
+        // अहवाल १: जुना BLO प्रगती अहवाल (Landscape)
+        // ==========================================
+        const pdfContainer = document.getElementById('pdfContent');
+        pdfContainer.innerHTML = ""; 
+
+        const headers1 = [
+            "Sr. No", "Name of Supervisor", "Name of BLO", "Part Number", 
+            "Total Elector", "Total EFs Distributed", "Total EFs Digitized", 
+            "EFs Submitted (Not verified)", "EFs Verified by BLO", "Mapped as Progeny", 
+            "Mapped as Self", "No Mapping", "UEF Death", "UEF Permanent Shifting", 
+            "UEF Already Enrolled", "UEF Absent", "UEF Others", "Total UEF"
+        ];
+
+        const numericKeys1 = [
+            "Total Elector", "Total EFs Distributed", "Total EFs Digitized", 
+            "EFs Submitted by Elector ( Not verified by BLO)", "EFs Verified by BLO", 
+            "Mapped as Progeny", "Mapped as Self", "No Mapping", "UEF Death", 
+            "UEF Permanent Shifting", "UEF Already Enrolled", "UEF Absent", "UEF Others", "Total UEF"
+        ];
+
+        let grandTotals1 = Array(numericKeys1.length).fill(0);
+        let srNo1 = 1;
+        let finalHtml1 = "";
 
         supervisorNames.forEach((sup, index) => {
             let supRows = groupedData[sup];
-            let supTotals = Array(numericKeys.length).fill(0);
+            let supTotals1 = Array(numericKeys1.length).fill(0);
             
-            if (index > 0) {
-                finalHtml += `<div class="html2pdf__page-break"></div>`;
-            }
+            if (index > 0) finalHtml1 += `<div class="html2pdf__page-break"></div>`;
+            finalHtml1 += `<div class="supervisor-block">`;
             
-            finalHtml += `<div class="supervisor-block">`;
-            
-            finalHtml += `
+            finalHtml1 += `
             <div class="print-header">
                 <h3>BLO प्रगती अहवाल (AERO श्री अभिजीत देवगिरकर)</h3>
                 <p>${reportDateStr}</p>
                 <hr style="border: 1px solid #003366; margin-top: 10px; margin-bottom: 10px;">
             </div>`;
             
-            finalHtml += `<table><thead><tr>`;
+            finalHtml1 += `<table class="original-table"><thead><tr>`;
             
-            headers.forEach(h => {
-                if (h === "Name of Supervisor") {
-                    finalHtml += `<th style="width: 8%;">${h}</th>`;
-                } else if (h === "Name of BLO") {
-                    finalHtml += `<th style="width: 14%;">${h}</th>`;
-                } else if (h === "Sr. No" || h === "Part Number") {
-                    finalHtml += `<th style="width: 4%;">${h}</th>`;
-                } else {
-                    finalHtml += `<th>${h}</th>`;
-                }
+            headers1.forEach(h => {
+                if (h === "Name of Supervisor") finalHtml1 += `<th style="width: 8%;">${h}</th>`;
+                else if (h === "Name of BLO") finalHtml1 += `<th style="width: 14%;">${h}</th>`;
+                else if (h === "Sr. No" || h === "Part Number") finalHtml1 += `<th style="width: 4%;">${h}</th>`;
+                else finalHtml1 += `<th>${h}</th>`;
             });
-            finalHtml += `</tr></thead><tbody>`;
+            finalHtml1 += `</tr></thead><tbody>`;
 
             supRows.forEach((item, rowIndex) => {
-                finalHtml += `<tr>`;
-                finalHtml += `<td>${srNo++}</td>`;
+                finalHtml1 += `<tr><td>${srNo1++}</td>`;
+                if (rowIndex === 0) finalHtml1 += `<td rowspan="${supRows.length}" style="background-color: #fcfcfc;"><b>${item.supName}</b></td>`;
                 
-                if (rowIndex === 0) {
-                    finalHtml += `<td rowspan="${supRows.length}" style="vertical-align: middle; background-color: #fcfcfc;"><b>${item.supName}</b></td>`;
-                }
+                finalHtml1 += `<td style="text-align: left;">${item.bloName}</td><td>${item.partNo}</td>`;
                 
-                finalHtml += `<td style="text-align: left;">${item.bloName}</td>`;
-                finalHtml += `<td>${item.partNo}</td>`;
-                
-                numericKeys.forEach((key, kIndex) => {
+                numericKeys1.forEach((key, kIndex) => {
                     let val = parseInt(item.data[key]) || 0;
-                    finalHtml += `<td>${val}</td>`;
-                    supTotals[kIndex] += val;
-                    grandTotals[kIndex] += val;
+                    finalHtml1 += `<td>${val}</td>`;
+                    supTotals1[kIndex] += val;
+                    grandTotals1[kIndex] += val;
                 });
-                finalHtml += `</tr>`;
+                finalHtml1 += `</tr>`;
             });
 
-            // सुपरवायझरची बेरीज (दुरुस्ती: colspan="3" ऐवजी colspan="4" केले)
-            finalHtml += `<tr class="subtotal-row">`;
-            finalHtml += `<td colspan="4" style="text-align:right;">${sup} (एकूण)</td>`;
-            supTotals.forEach(val => finalHtml += `<td>${val}</td>`);
-            finalHtml += `</tr>`;
+            finalHtml1 += `<tr class="subtotal-row"><td colspan="4" style="text-align:right;">${sup} (एकूण)</td>`;
+            supTotals1.forEach(val => finalHtml1 += `<td>${val}</td>`);
+            finalHtml1 += `</tr>`;
 
             if (index === supervisorNames.length - 1) {
-                finalHtml += `<tr class="grandtotal-row">`;
-                finalHtml += `<td colspan="4" style="text-align:right;">सर्व सुपरवायझर (एकंदर बेरीज)</td>`;
-                grandTotals.forEach(val => finalHtml += `<td>${val}</td>`);
-                finalHtml += `</tr>`;
+                finalHtml1 += `<tr class="grandtotal-row"><td colspan="4" style="text-align:right;">सर्व सुपरवायझर (एकंदर बेरीज)</td>`;
+                grandTotals1.forEach(val => finalHtml1 += `<td>${val}</td>`);
+                finalHtml1 += `</tr>`;
             }
-
-            finalHtml += `</tbody></table></div>`; 
+            finalHtml1 += `</tbody></table></div>`; 
         });
+        pdfContainer.innerHTML = finalHtml1;
 
-        pdfContainer.innerHTML = finalHtml;
+        // ==========================================
+        // अहवाल २: नवीन दैनिक लक्षांक अहवाल (Portrait)
+        // ==========================================
+        const targetPdfContainer = document.getElementById('targetPdfContent');
         
+        // तारखांचे कॅल्क्युलेशन (Start: 30 June, End: 25 July)
+        let today = new Date();
+        let startDate = new Date(2026, 5, 30); // June 30
+        let endDate = new Date(2026, 6, 25);   // July 25
+        
+        today.setHours(0,0,0,0); startDate.setHours(0,0,0,0); endDate.setHours(0,0,0,0);
+        
+        let totalCampaignDays = 26; // 30 June to 25 July
+        let elapsedDays = Math.round((today - startDate) / (1000 * 60 * 60 * 24)) + 1;
+        if (elapsedDays < 1) elapsedDays = 1;
+        if (elapsedDays > totalCampaignDays) elapsedDays = totalCampaignDays;
+        
+        let remainingDays = totalCampaignDays - elapsedDays;
+        if (remainingDays < 1) remainingDays = 1; // Divide by zero टाळण्यासाठी
+
+        const headers2 = [
+            "अ. क्र.", "पर्यवेक्षक", "BLO नांव", "भाग क्र.", "एकूण मतदार",
+            "EF वाटप दैन. लक्ष.", "EF डिजी. दैन. लक्ष.",
+            "अपेक्षित वाटप", "अपेक्षित डिजी.",
+            "प्रत्यक्ष वाटप", "प्रत्यक्ष डिजी.",
+            "दैन. वाटप %", "दैन. डिजी. %",
+            "एकुण वाटप %", "एकुण डिजी. %",
+            "New 🎯 वाटप/दीन", "New 🎯 डिजी./दीन"
+        ];
+
+        let grandTotals2 = Array(13).fill(0); // 13 numeric metrics
+        let srNo2 = 1;
+        let finalHtml2 = "";
+
+        supervisorNames.forEach((sup, index) => {
+            let supRows = groupedData[sup];
+            let supTotals2 = Array(13).fill(0);
+            
+            if (index > 0) finalHtml2 += `<div class="html2pdf__page-break"></div>`;
+            finalHtml2 += `<div class="supervisor-block">`;
+            
+            finalHtml2 += `
+            <div class="print-header">
+                <h3>SIR दैनिक लक्षांक व प्रगती अहवाल (AERO श्री अभिजीत देवगिरकर)</h3>
+                <p>${reportDateStr} | मोहिमेचे दिवस: ${totalCampaignDays} | झालेले: ${elapsedDays} | उर्वरित: ${remainingDays}</p>
+                <hr style="border: 1px solid #198754; margin-top: 8px; margin-bottom: 8px;">
+            </div>`;
+            
+            finalHtml2 += `<table class="target-table"><thead><tr>`;
+            headers2.forEach(h => {
+                if (h === "पर्यवेक्षक") finalHtml2 += `<th style="width: 7%;">${h}</th>`;
+                else if (h === "BLO नांव") finalHtml2 += `<th style="width: 10%;">${h}</th>`;
+                else if (h === "अ. क्र." || h === "भाग क्र.") finalHtml2 += `<th style="width: 3%;">${h}</th>`;
+                else finalHtml2 += `<th>${h}</th>`;
+            });
+            finalHtml2 += `</tr></thead><tbody>`;
+
+            supRows.forEach((item, rowIndex) => {
+                let totalElector = parseInt(item.data["Total Elector"]) || 0;
+                let actualDist = parseInt(item.data["Total EFs Distributed"]) || 0;
+                let actualDigi = parseInt(item.data["Total EFs Digitized"]) || 0;
+
+                // गणिते (Math)
+                let dailyTargetDist = Math.round(totalElector / totalCampaignDays);
+                let dailyTargetDigi = Math.round(totalElector / totalCampaignDays);
+                let expectedDistToday = dailyTargetDist * elapsedDays;
+                let expectedDigiToday = dailyTargetDigi * elapsedDays;
+
+                let dailyDistPerc = expectedDistToday ? ((actualDist / expectedDistToday) * 100) : 0;
+                let dailyDigiPerc = expectedDigiToday ? ((actualDigi / expectedDigiToday) * 100) : 0;
+                let totalDistPerc = totalElector ? ((actualDist / totalElector) * 100) : 0;
+                let totalDigiPerc = totalElector ? ((actualDigi / totalElector) * 100) : 0;
+
+                let remDist = Math.max(0, totalElector - actualDist);
+                let remDigi = Math.max(0, totalElector - actualDigi);
+                let newTargetDist = Math.ceil(remDist / remainingDays);
+                let newTargetDigi = Math.ceil(remDigi / remainingDays);
+
+                let rowMetrics = [
+                    totalElector, dailyTargetDist, dailyTargetDigi, expectedDistToday, expectedDigiToday,
+                    actualDist, actualDigi, dailyDistPerc, dailyDigiPerc, totalDistPerc, totalDigiPerc,
+                    newTargetDist, newTargetDigi
+                ];
+
+                finalHtml2 += `<tr><td>${srNo2++}</td>`;
+                if (rowIndex === 0) finalHtml2 += `<td rowspan="${supRows.length}" style="background-color: #fcfcfc;"><b>${item.supName}</b></td>`;
+                
+                finalHtml2 += `<td style="text-align: left;">${item.bloName}</td><td>${item.partNo}</td>`;
+                
+                rowMetrics.forEach((val, kIndex) => {
+                    if(kIndex >= 7 && kIndex <= 10) finalHtml2 += `<td><b>${val.toFixed(0)}%</b></td>`; // Percentages
+                    else finalHtml2 += `<td>${val}</td>`;
+                    
+                    // Add raw values to totals
+                    if(kIndex < 7 || kIndex > 10) {
+                        supTotals2[kIndex] += val;
+                        grandTotals2[kIndex] += val;
+                    }
+                });
+                finalHtml2 += `</tr>`;
+            });
+
+            // सुपरवायझर सब-टोटल (टक्केवारी पुन्हा कॅल्क्युलेट करणे)
+            supTotals2[7] = supTotals2[3] ? ((supTotals2[5] / supTotals2[3]) * 100) : 0;
+            supTotals2[8] = supTotals2[4] ? ((supTotals2[6] / supTotals2[4]) * 100) : 0;
+            supTotals2[9] = supTotals2[0] ? ((supTotals2[5] / supTotals2[0]) * 100) : 0;
+            supTotals2[10] = supTotals2[0] ? ((supTotals2[6] / supTotals2[0]) * 100) : 0;
+
+            finalHtml2 += `<tr class="subtotal-row"><td colspan="4" style="text-align:right;">${sup} (एकूण)</td>`;
+            supTotals2.forEach((val, idx) => {
+                if(idx >= 7 && idx <= 10) finalHtml2 += `<td>${val.toFixed(0)}%</td>`;
+                else finalHtml2 += `<td>${val}</td>`;
+            });
+            finalHtml2 += `</tr>`;
+
+            // एकंदर बेरीज (Grand Total)
+            if (index === supervisorNames.length - 1) {
+                grandTotals2[7] = grandTotals2[3] ? ((grandTotals2[5] / grandTotals2[3]) * 100) : 0;
+                grandTotals2[8] = grandTotals2[4] ? ((grandTotals2[6] / grandTotals2[4]) * 100) : 0;
+                grandTotals2[9] = grandTotals2[0] ? ((grandTotals2[5] / grandTotals2[0]) * 100) : 0;
+                grandTotals2[10] = grandTotals2[0] ? ((grandTotals2[6] / grandTotals2[0]) * 100) : 0;
+
+                finalHtml2 += `<tr class="grandtotal-row"><td colspan="4" style="text-align:right;">सर्व सुपरवायझर (एकंदर बेरीज)</td>`;
+                grandTotals2.forEach((val, idx) => {
+                    if(idx >= 7 && idx <= 10) finalHtml2 += `<td>${val.toFixed(0)}%</td>`;
+                    else finalHtml2 += `<td>${val}</td>`;
+                });
+                finalHtml2 += `</tr>`;
+            }
+            finalHtml2 += `</tbody></table></div>`; 
+        });
+        targetPdfContainer.innerHTML = finalHtml2;
+        
+        // UI दाखवणे
         document.getElementById('loadingMsg').style.display = 'none';
+        document.getElementById('actionButtons').style.display = 'flex';
         pdfContainer.style.display = 'block';
-        document.getElementById('downloadPdfBtn').style.display = 'block';
+        document.getElementById('titleOriginal').style.display = 'block';
+        targetPdfContainer.style.display = 'block';
+        document.getElementById('titleTarget').style.display = 'block';
     }
 
-    function downloadPDF() {
-        const element = document.getElementById('pdfContent');
-        
+    // फाईलचे नाव (वेळेसह) मिळवणारे कॉमन फंक्शन
+    function getDynamicFileName(prefix) {
         const now = new Date();
         const d = now.getDate();
         const m = now.getMonth() + 1;
         const y = String(now.getFullYear()).slice(-2); 
-        
         let h = now.getHours();
         let min = now.getMinutes();
         const ampm = h >= 12 ? 'pm' : 'am';
-        h = h % 12;
-        h = h ? h : 12; 
+        h = h % 12; h = h ? h : 12; 
         min = min < 10 ? '0' + min : min; 
+        return `${prefix} ${d}-${m}-${y} ${h}.${min} ${ampm}.pdf`;
+    }
 
-        const dynamicFileName = `BLO Report ${d}-${m}-${y} ${h}.${min} ${ampm}.pdf`;
-
+    // १. जुना प्रगती अहवाल (Landscape) डाऊनलोड करणे
+    function downloadPDF() {
+        const element = document.getElementById('pdfContent');
+        const dynamicFileName = getDynamicFileName("BLO Report");
         const originalTitle = document.title;
         document.title = dynamicFileName.replace('.pdf', '');
 
@@ -272,13 +407,30 @@
             filename:     dynamicFileName,
             image:        { type: 'jpeg', quality: 0.98 },
             html2canvas:  { scale: 2, useCORS: true },
-            jsPDF:        { unit: 'mm', format: 'a4', orientation: 'landscape' },
+            jsPDF:        { unit: 'mm', format: 'a4', orientation: 'landscape' }, // Landscape!
             pagebreak:    { mode: ['css', 'legacy'] } 
         };
 
-        html2pdf().set(opt).from(element).save().then(() => {
-            document.title = originalTitle;
-        });
+        html2pdf().set(opt).from(element).save().then(() => { document.title = originalTitle; });
+    }
+
+    // २. नवीन लक्षांक अहवाल (Portrait) डाऊनलोड करणे
+    function downloadTargetPDF() {
+        const element = document.getElementById('targetPdfContent');
+        const dynamicFileName = getDynamicFileName("Target Report");
+        const originalTitle = document.title;
+        document.title = dynamicFileName.replace('.pdf', '');
+
+        const opt = {
+            margin:       5,
+            filename:     dynamicFileName,
+            image:        { type: 'jpeg', quality: 0.98 },
+            html2canvas:  { scale: 2, useCORS: true },
+            jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }, // Portrait!
+            pagebreak:    { mode: ['css', 'legacy'] } 
+        };
+
+        html2pdf().set(opt).from(element).save().then(() => { document.title = originalTitle; });
     }
 </script>
 </body>
