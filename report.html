@@ -20,13 +20,13 @@
         
         /* १. जुन्या अहवालाचे CSS (Landscape) */
         table.original-table { width: 100%; table-layout: auto; font-size: 11px; border-collapse: collapse; margin-bottom: 20px; }
-        table.original-table th, table.original-table td { padding: 5px 4px !important; text-align: center; vertical-align: middle; white-space: normal; border: 1px solid #777; }
+        table.original-table th, table.original-table td { padding: 6px 4px !important; text-align: center; vertical-align: middle; white-space: normal; border: 1px solid #777; line-height: 1.2; }
         table.original-table th { background-color: #003366 !important; color: white !important; font-size: 11px; }
         
-        /* २. नवीन अहवालाचे CSS (Landscape) */
+        /* २. नवीन अहवालाचे CSS (पूर्ण हेडर्स आणि सुटसुटीत डिझाईन) */
         table.target-table { width: 100%; table-layout: auto; font-size: 10px; border-collapse: collapse; margin-bottom: 20px; }
-        table.target-table th, table.target-table td { padding: 5px 3px !important; text-align: center; vertical-align: middle; white-space: normal; border: 1px solid #777; line-height: 1.2; }
-        table.target-table th { background-color: #198754 !important; color: white !important; font-size: 10px; }
+        table.target-table th, table.target-table td { padding: 6px 3px !important; text-align: center; vertical-align: middle; white-space: normal; border: 1px solid #777; line-height: 1.3; }
+        table.target-table th { background-color: #198754 !important; color: white !important; font-size: 9px; } /* हेडर्ससाठी फॉन्ट 9px ठेवला आहे जेणेकरून पूर्ण नावे बसतील */
         
         .subtotal-row { background-color: #e9ecef !important; font-weight: bold; }
         .grandtotal-row { background-color: #ffc107 !important; color: black !important; font-weight: bold; font-size: 12px; border-top: 2px solid #000; }
@@ -117,11 +117,8 @@
 
         document.getElementById('loadingMsg').style.display = 'block';
         
-        // सुरुवातीला बटन लपवणे (जेव्हा नवीन फाईल निवडली जाते)
         const btn = document.getElementById('singleDownloadBtn');
-        if (btn) {
-            btn.style.display = 'none';
-        }
+        if (btn) btn.style.display = 'none';
         
         const reader = new FileReader();
         reader.onload = function(event) {
@@ -163,7 +160,7 @@
         let supervisorNames = Object.keys(groupedData).sort((a, b) => a.localeCompare(b));
 
         // ==========================================
-        // अहवाल १: जुना BLO प्रगती अहवाल (Landscape)
+        // अहवाल १: जुना BLO प्रगती अहवाल
         // ==========================================
         const pdfContainer = document.getElementById('pdfContent');
         pdfContainer.innerHTML = ""; 
@@ -240,7 +237,7 @@
         pdfContainer.innerHTML = finalHtml1;
 
         // ==========================================
-        // अहवाल २: नवीन दैनिक लक्षांक अहवाल (Landscape)
+        // अहवाल २: दैनिक लक्षांक अहवाल (पूर्ण हेडर्स सह)
         // ==========================================
         const targetPdfContainer = document.getElementById('targetPdfContent');
         
@@ -258,14 +255,15 @@
         let remainingDays = totalCampaignDays - elapsedDays;
         if (remainingDays < 1) remainingDays = 1; 
 
+        // सर्व हेडर्स पूर्ण नावाने घेतले आहेत
         const headers2 = [
             "अ. क्र.", "पर्यवेक्षक", "BLO नांव", "भाग क्र.", "एकूण मतदार",
-            "EF वाटप दैन. लक्ष.", "EF डिजी. दैन. लक्ष.",
-            "अपेक्षित वाटप", "अपेक्षित डिजी.",
-            "प्रत्यक्ष वाटप", "प्रत्यक्ष डिजी.",
-            "दैन. वाटप %", "दैन. डिजी. %",
-            "एकुण वाटप %", "एकुण डिजी. %",
-            "New 🎯 वाटप/दीन", "New 🎯 डिजी./दीन"
+            "EF वाटप दैनिक लक्षांक", "EF डिजिटिझेशन दैनिक लक्षांक",
+            "EF आज अखेर अपेक्षित वाटप", "EF आज अखेर अपेक्षित डिजिटिझेशन",
+            "EF प्रत्यक्ष वाटप", "EF प्रत्यक्ष डिजिटिझेशन",
+            "EF दैनिक वाटप लक्षांक पूर्तता %", "EF दैनिक डिजिटिझेशन लक्षांक पूर्तता %",
+            "EF प्रत्यक्ष वाटप पूर्तता %", "EF प्रत्यक्ष डिजिटिझेशन %",
+            "New Target 🎯 EF वाटप/दीन", "New Target 🎯 EF डिजिटिझेशन/दीन"
         ];
 
         let grandTotals2 = Array(13).fill(0); 
@@ -289,10 +287,10 @@
             finalHtml2 += `<table class="target-table"><thead><tr>`;
             
             headers2.forEach(h => {
-                if (h === "पर्यवेक्षक") finalHtml2 += `<th style="width: 8%;">${h}</th>`;
+                if (h === "पर्यवेक्षक") finalHtml2 += `<th style="width: 7%;">${h}</th>`;
                 else if (h === "BLO नांव") finalHtml2 += `<th style="width: 12%;">${h}</th>`;
-                else if (h === "अ. क्र." || h === "भाग क्र.") finalHtml2 += `<th style="width: 3%;">${h}</th>`;
-                else finalHtml2 += `<th>${h}</th>`;
+                else if (h === "अ. क्र." || h === "भाग क्र.") finalHtml2 += `<th style="width: 3.5%;">${h}</th>`;
+                else finalHtml2 += `<th>${h}</th>`; // उरलेली जागा ब्राऊझर आपोआप ऍडजेस्ट करेल
             });
             finalHtml2 += `</tr></thead><tbody>`;
 
@@ -368,14 +366,10 @@
         });
         targetPdfContainer.innerHTML = finalHtml2;
         
-        // प्रोसेसिंग पूर्ण झाल्यावर UI दाखवणे
         document.getElementById('loadingMsg').style.display = 'none';
         
-        // सिंगल डाऊनलोड बटन दाखवणे
         const btn = document.getElementById('singleDownloadBtn');
-        if(btn) {
-            btn.style.display = 'block';
-        }
+        if(btn) btn.style.display = 'block';
 
         pdfContainer.style.display = 'block';
         document.getElementById('titleOriginal').style.display = 'block';
@@ -383,7 +377,6 @@
         document.getElementById('titleTarget').style.display = 'block';
     }
 
-    // एकाच बटनावर क्लिक केल्यास दोन्ही PDF एकामागोमाग डाऊनलोड करण्याचे फंक्शन
     function downloadBothPDFs() {
         const btn = document.getElementById('singleDownloadBtn');
         btn.innerText = "⏳ कृपया प्रतीक्षा करा... (दोन्ही PDF जनरेट होत आहेत)";
@@ -402,11 +395,10 @@
         const timeStr = `${d}-${m}-${y} ${h}.${min} ${ampm}`;
 
         const dynamicFileName1 = `BLO Report ${timeStr}.pdf`;
-        const dynamicFileName2 = `🎯 लक्षक पूर्तता ${timeStr}.pdf`;
+        const dynamicFileName2 = `🎯 लक्षांक पूर्तता ${timeStr}.pdf`;
         
         const originalTitle = document.title;
 
-        // पहिला अहवाल (BLO Report) 
         const opt1 = {
             margin:       5,
             filename:     dynamicFileName1,
@@ -416,7 +408,6 @@
             pagebreak:    { mode: ['css', 'legacy'] } 
         };
 
-        // दुसरा अहवाल (Target Report) 
         const opt2 = {
             margin:       5,
             filename:     dynamicFileName2,
@@ -426,15 +417,12 @@
             pagebreak:    { mode: ['css', 'legacy'] } 
         };
 
-        // पहिली फाईल डाऊनलोड
         document.title = dynamicFileName1.replace('.pdf', '');
         html2pdf().set(opt1).from(document.getElementById('pdfContent')).save().then(() => {
             
-            // पहिली फाईल जनरेट झाल्यावर २ सेकंदाने दुसरी फाईल डाऊनलोड (सिस्टीमला वेळ देण्यासाठी)
             setTimeout(() => {
                 document.title = dynamicFileName2.replace('.pdf', '');
                 html2pdf().set(opt2).from(document.getElementById('targetPdfContent')).save().then(() => {
-                    // दोन्ही पूर्ण झाल्यावर बटन पूर्ववत करणे
                     document.title = originalTitle;
                     btn.innerText = "📄 दोन्ही अहवाल एकत्र डाऊनलोड करा (२ PDF फाईल्स)";
                     btn.classList.replace('btn-warning', 'btn-success');
