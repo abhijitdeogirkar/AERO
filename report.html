@@ -14,12 +14,12 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     
     <style>
-        /* अगदी पहिल्या अहवालासारखाच परफेक्ट आणि सुरक्षित फॉन्ट (अक्षरे तुटणार नाहीत) */
+        /* अत्यंत सुस्पष्ट आणि सुरक्षित फॉन्ट (अक्षरे तुटणार नाहीत) */
         body { background-color: #f4f7f6; font-family: 'Arial Unicode MS', Arial, sans-serif; }
         
         .table-wrapper { overflow-x: auto; background: white; padding: 15px; border-radius: 8px; margin-bottom: 20px;}
         
-        /* १. दोन्ही अहवालांसाठी एकसमान (Common) CSS सेटिंग्ज (सुटसुटीत आणि वाचनीय) */
+        /* दोन्ही अहवालांसाठी एकसमान (Common) CSS सेटिंग्ज */
         table.original-table, table.target-table { 
             width: 100%; 
             table-layout: auto; 
@@ -28,7 +28,6 @@
             margin-bottom: 20px; 
         }
         
-        /* पॅडिंग आणि लाईन-हाईट मूळ स्थितीत आणले, जेणेकरून अक्षरे एकमेकांत घुसणार नाहीत */
         table.original-table th, table.original-table td, 
         table.target-table th, table.target-table td { 
             padding: 5px 4px !important; 
@@ -174,7 +173,7 @@
         let supervisorNames = Object.keys(groupedData).sort((a, b) => a.localeCompare(b));
 
         // ==========================================
-        // अहवाल १: जुना BLO प्रगती अहवाल 
+        // अहवाल १: जुना BLO प्रगती अहवाल
         // ==========================================
         const pdfContainer = document.getElementById('pdfContent');
         pdfContainer.innerHTML = ""; 
@@ -251,7 +250,7 @@
         pdfContainer.innerHTML = finalHtml1;
 
         // ==========================================
-        // अहवाल २: दैनिक लक्षांक अहवाल 
+        // अहवाल २: दैनिक लक्षांक अहवाल (१५ कॉलम्स)
         // ==========================================
         const targetPdfContainer = document.getElementById('targetPdfContent');
         
@@ -270,13 +269,13 @@
         if (remainingDays < 1) remainingDays = 1; 
 
         const headers2 = [
-            "अ. क्र.", "पर्यवेक्षक", "BLO नांव", "भाग क्र.", "एकूण<br>मतदार",
-            "EF वाटप व डिजि.<br>दैनिक लक्षांक", 
-            "EF आज अखेर अपेक्षित<br>वाटप व डिजि.",
-            "EF प्रत्यक्ष<br>वाटप", "EF प्रत्यक्ष<br>डिजि.",
-            "EF दैनिक वाटप<br>लक्षांक पूर्तता %", "EF दैनिक डिजि.<br>लक्षांक पूर्तता %",
-            "EF प्रत्यक्ष वाटप<br>पूर्तता %", "EF प्रत्यक्ष डिजि.<br>पूर्तता %",
-            "New Target 🎯<br>वाटप/दिवस", "New Target 🎯<br>डिजि./दिवस"
+            "अ. क्र.", "पर्यवेक्षक", "BLO नांव", "भाग क्र.", "एकूण मतदार",
+            "EF वाटप व डिजिटिझेशन दैनिक लक्षांक", 
+            "EF आज अखेर अपेक्षित वाटप व डिजिटिझेशन",
+            "EF प्रत्यक्ष वाटप", "EF प्रत्यक्ष डिजिटिझेशन",
+            "EF दैनिक वाटप लक्षांक पूर्तता %", "EF दैनिक डिजिटिझेशन लक्षांक पूर्तता %",
+            "EF प्रत्यक्ष वाटप पूर्तता %", "EF प्रत्यक्ष डिजिटिझेशन %",
+            "New Target 🎯 EF वाटप/दिवस", "New Target 🎯 EF डिजिटिझेशन/दिवस"
         ];
 
         let grandTotals2 = Array(11).fill(0); 
@@ -389,11 +388,25 @@
         document.getElementById('titleTarget').style.display = 'block';
     }
 
+    // PDF जनरेट करण्याची १००% खात्रीशीर पद्धत (ज्यामध्ये कॉलम्स दबले जाणार नाहीत)
     function downloadBothPDFs() {
         const btn = document.getElementById('singleDownloadBtn');
         btn.innerText = "⏳ कृपया प्रतीक्षा करा... (दोन्ही PDF जनरेट होत आहेत)";
         btn.classList.replace('btn-success', 'btn-warning');
         btn.disabled = true;
+
+        const el1 = document.getElementById('pdfContent');
+        const el2 = document.getElementById('targetPdfContent');
+
+        // *** कायमस्वरूपी उपाय (Permanent Fix): *** 
+        // मोबाईलची स्क्रीन छोटी असल्यामुळे टेबल दबून अक्षरे एकमेकांत घुसू नयेत, 
+        // म्हणून PDF चा फोटो घेण्यापूर्वी आपण टेबलला बळजबरीने '1450px' ची जागा देत आहोत. 
+        // यामुळे अक्षरे एकदम सुटसुटीत राहतील आणि A4 पानावर परफेक्ट बसतील.
+        const origWidth1 = el1.style.width;
+        const origWidth2 = el2.style.width;
+        
+        el1.style.width = '1450px';
+        el2.style.width = '1450px';
 
         const now = new Date();
         const d = now.getDate();
@@ -411,32 +424,32 @@
         
         const originalTitle = document.title;
 
-        // दोन्ही अहवालांसाठी आता १००% समान PDF जनरेशन सेटिंग्ज 
-        const opt1 = {
+        // दोन्ही अहवालांसाठी मूळ आणि परफेक्ट सेटिंग
+        const opt = {
             margin:       5,
-            filename:     dynamicFileName1,
             image:        { type: 'jpeg', quality: 0.98 },
             html2canvas:  { scale: 2, useCORS: true },
             jsPDF:        { unit: 'mm', format: 'a4', orientation: 'landscape' },
             pagebreak:    { mode: ['css', 'legacy'] } 
         };
 
-        const opt2 = {
-            margin:       5,
-            filename:     dynamicFileName2,
-            image:        { type: 'jpeg', quality: 0.98 },
-            html2canvas:  { scale: 2, useCORS: true },
-            jsPDF:        { unit: 'mm', format: 'a4', orientation: 'landscape' },
-            pagebreak:    { mode: ['css', 'legacy'] } 
-        };
-
+        // पहिला अहवाल डाऊनलोड
+        opt.filename = dynamicFileName1;
         document.title = dynamicFileName1.replace('.pdf', '');
-        html2pdf().set(opt1).from(document.getElementById('pdfContent')).save().then(() => {
+        
+        html2pdf().set(opt).from(el1).save().then(() => {
             
             setTimeout(() => {
+                // दुसरा अहवाल डाऊनलोड
+                opt.filename = dynamicFileName2;
                 document.title = dynamicFileName2.replace('.pdf', '');
-                html2pdf().set(opt2).from(document.getElementById('targetPdfContent')).save().then(() => {
+                
+                html2pdf().set(opt).from(el2).save().then(() => {
+                    // सर्व काम झाल्यावर टेबलला मूळ स्थितीत आणणे आणि बटन रिसेट करणे
                     document.title = originalTitle;
+                    el1.style.width = origWidth1;
+                    el2.style.width = origWidth2;
+                    
                     btn.innerText = "📄 दोन्ही अहवाल एकत्र डाऊनलोड करा (२ PDF फाईल्स)";
                     btn.classList.replace('btn-warning', 'btn-success');
                     btn.disabled = false;
