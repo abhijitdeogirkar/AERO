@@ -23,7 +23,7 @@
         table.original-table th, table.original-table td { padding: 5px 4px !important; text-align: center; vertical-align: middle; white-space: normal; border: 1px solid #777; }
         table.original-table th { background-color: #003366 !important; color: white !important; font-size: 11px; }
         
-        /* २. नवीन अहवालाचे CSS (आता हे पण Landscape साठी मोठे केले आहे) */
+        /* २. नवीन अहवालाचे CSS (Landscape) */
         table.target-table { width: 100%; table-layout: auto; font-size: 10px; border-collapse: collapse; margin-bottom: 20px; }
         table.target-table th, table.target-table td { padding: 5px 3px !important; text-align: center; vertical-align: middle; white-space: normal; border: 1px solid #777; line-height: 1.2; }
         table.target-table th { background-color: #198754 !important; color: white !important; font-size: 10px; }
@@ -116,7 +116,12 @@
         if (!file) return;
 
         document.getElementById('loadingMsg').style.display = 'block';
-        document.getElementById('singleDownloadBtn').style.display = 'none';
+        
+        // सुरुवातीला बटन लपवणे (जेव्हा नवीन फाईल निवडली जाते)
+        const btn = document.getElementById('singleDownloadBtn');
+        if (btn) {
+            btn.style.display = 'none';
+        }
         
         const reader = new FileReader();
         reader.onload = function(event) {
@@ -235,7 +240,7 @@
         pdfContainer.innerHTML = finalHtml1;
 
         // ==========================================
-        // अहवाल २: नवीन दैनिक लक्षांक अहवाल (आता Landscape)
+        // अहवाल २: नवीन दैनिक लक्षांक अहवाल (Landscape)
         // ==========================================
         const targetPdfContainer = document.getElementById('targetPdfContent');
         
@@ -283,7 +288,6 @@
             
             finalHtml2 += `<table class="target-table"><thead><tr>`;
             
-            // लँडस्केप असल्यामुळे कॉलम्स व्यवस्थित सेट होतील
             headers2.forEach(h => {
                 if (h === "पर्यवेक्षक") finalHtml2 += `<th style="width: 8%;">${h}</th>`;
                 else if (h === "BLO नांव") finalHtml2 += `<th style="width: 12%;">${h}</th>`;
@@ -364,22 +368,28 @@
         });
         targetPdfContainer.innerHTML = finalHtml2;
         
+        // प्रोसेसिंग पूर्ण झाल्यावर UI दाखवणे
         document.getElementById('loadingMsg').style.display = 'none';
-        document.getElementById('singleDownloadBtn').style.display = 'block';
+        
+        // सिंगल डाऊनलोड बटन दाखवणे
+        const btn = document.getElementById('singleDownloadBtn');
+        if(btn) {
+            btn.style.display = 'block';
+        }
+
         pdfContainer.style.display = 'block';
         document.getElementById('titleOriginal').style.display = 'block';
         targetPdfContainer.style.display = 'block';
         document.getElementById('titleTarget').style.display = 'block';
     }
 
-    // एकाच बटनावर क्लिक केल्यास दोन्ही PDF एकामागोमाग डाऊनलोड करण्यासाठीचे फंक्शन
+    // एकाच बटनावर क्लिक केल्यास दोन्ही PDF एकामागोमाग डाऊनलोड करण्याचे फंक्शन
     function downloadBothPDFs() {
         const btn = document.getElementById('singleDownloadBtn');
         btn.innerText = "⏳ कृपया प्रतीक्षा करा... (दोन्ही PDF जनरेट होत आहेत)";
         btn.classList.replace('btn-success', 'btn-warning');
         btn.disabled = true;
 
-        // दोन्ही फाईल्ससाठी एकच वेळ (Timestamp) निश्चित करणे
         const now = new Date();
         const d = now.getDate();
         const m = now.getMonth() + 1;
@@ -396,7 +406,7 @@
         
         const originalTitle = document.title;
 
-        // पहिला अहवाल (BLO Report) - Landscape
+        // पहिला अहवाल (BLO Report) 
         const opt1 = {
             margin:       5,
             filename:     dynamicFileName1,
@@ -406,7 +416,7 @@
             pagebreak:    { mode: ['css', 'legacy'] } 
         };
 
-        // दुसरा अहवाल (Target Report) - आता हा पण Landscape आहे
+        // दुसरा अहवाल (Target Report) 
         const opt2 = {
             margin:       5,
             filename:     dynamicFileName2,
@@ -416,21 +426,21 @@
             pagebreak:    { mode: ['css', 'legacy'] } 
         };
 
-        // पहिली फाईल डाऊनलोड करणे सुरू करा
+        // पहिली फाईल डाऊनलोड
         document.title = dynamicFileName1.replace('.pdf', '');
         html2pdf().set(opt1).from(document.getElementById('pdfContent')).save().then(() => {
             
-            // पहिली फाईल जनरेट झाल्यावर १ सेकंदाने दुसरी फाईल डाऊनलोड करणे
+            // पहिली फाईल जनरेट झाल्यावर २ सेकंदाने दुसरी फाईल डाऊनलोड (सिस्टीमला वेळ देण्यासाठी)
             setTimeout(() => {
                 document.title = dynamicFileName2.replace('.pdf', '');
                 html2pdf().set(opt2).from(document.getElementById('targetPdfContent')).save().then(() => {
-                    // दोन्ही डाऊनलोड पूर्ण झाल्यावर टायटल आणि बटन मूळ स्थितीत आणणे
+                    // दोन्ही पूर्ण झाल्यावर बटन पूर्ववत करणे
                     document.title = originalTitle;
                     btn.innerText = "📄 दोन्ही अहवाल एकत्र डाऊनलोड करा (२ PDF फाईल्स)";
                     btn.classList.replace('btn-warning', 'btn-success');
                     btn.disabled = false;
                 });
-            }, 1000);
+            }, 2000);
             
         });
     }
