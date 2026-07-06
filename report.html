@@ -18,15 +18,28 @@
         
         .table-wrapper { overflow-x: auto; background: white; padding: 15px; border-radius: 8px; margin-bottom: 20px;}
         
-        /* १. जुन्या अहवालाचे CSS (Landscape - यात कोणताही बदल नाही) */
-        table.original-table { width: 100%; table-layout: auto; font-size: 11px; border-collapse: collapse; margin-bottom: 20px; }
-        table.original-table th, table.original-table td { padding: 5px 4px !important; text-align: center; vertical-align: middle; white-space: normal; border: 1px solid #777; }
-        table.original-table th { background-color: #003366 !important; color: white !important; font-size: 11px; }
+        /* १. दोन्ही अहवालांसाठी एकसमान (Common) CSS सेटिंग्ज (सुटसुटीत आणि वाचनीय) */
+        table.original-table, table.target-table { 
+            width: 100%; 
+            table-layout: auto; 
+            font-size: 11px; 
+            border-collapse: collapse; 
+            margin-bottom: 20px; 
+        }
         
-        /* २. नवीन लक्षांक अहवालाचे CSS (टेबल कट होऊ नये म्हणून फॉन्ट आणि पॅडिंग थोडे ऍडजेस्ट केले) */
-        table.target-table { width: 100%; table-layout: auto; font-size: 9.5px; border-collapse: collapse; margin-bottom: 20px; }
-        table.target-table th, table.target-table td { padding: 4px 3px !important; text-align: center; vertical-align: middle; white-space: normal; border: 1px solid #777; line-height: 1.2; }
-        table.target-table th { background-color: #0b5031 !important; color: white !important; font-size: 9.5px; } /* डार्क हिरवा रंग */
+        table.original-table th, table.original-table td, 
+        table.target-table th, table.target-table td { 
+            padding: 5px 4px !important; 
+            text-align: center; 
+            vertical-align: middle; 
+            white-space: normal; 
+            word-wrap: break-word; 
+            border: 1px solid #777; 
+        }
+        
+        /* हेडर्सचे रंग: पहिला निळा, दुसरा डार्क हिरवा (फॉन्ट साईझ समान 11px) */
+        table.original-table th { background-color: #003366 !important; color: white !important; font-size: 11px; }
+        table.target-table th { background-color: #0b5031 !important; color: white !important; font-size: 11px; } 
         
         .subtotal-row { background-color: #e9ecef !important; font-weight: bold; }
         .grandtotal-row { background-color: #ffc107 !important; color: black !important; font-weight: bold; font-size: 12px; border-top: 2px solid #000; }
@@ -159,7 +172,7 @@
         let supervisorNames = Object.keys(groupedData).sort((a, b) => a.localeCompare(b));
 
         // ==========================================
-        // अहवाल १: जुना BLO प्रगती अहवाल 
+        // अहवाल १: जुना BLO प्रगती अहवाल (मूळ स्थितीत)
         // ==========================================
         const pdfContainer = document.getElementById('pdfContent');
         pdfContainer.innerHTML = ""; 
@@ -236,7 +249,7 @@
         pdfContainer.innerHTML = finalHtml1;
 
         // ==========================================
-        // अहवाल २: लक्षांक अहवाल (१५ कॉलम्स)
+        // अहवाल २: दैनिक लक्षांक अहवाल 
         // ==========================================
         const targetPdfContainer = document.getElementById('targetPdfContent');
         
@@ -254,14 +267,16 @@
         let remainingDays = totalCampaignDays - elapsedDays;
         if (remainingDays < 1) remainingDays = 1; 
 
+        // कॉलम रुंदी योग्य राहण्यासाठी आणि मजकूर न तुटण्यासाठी <br> लावून हेडर्स दिले आहेत. 
+        // हे दिसायलाही चांगले दिसतील आणि जागाही वाचवतील.
         const headers2 = [
-            "अ. क्र.", "पर्यवेक्षक", "BLO नांव", "भाग क्र.", "एकूण मतदार",
-            "EF वाटप व डिजिटिझेशन दैनिक लक्षांक", 
-            "EF आज अखेर अपेक्षित वाटप व डिजिटिझेशन",
-            "EF प्रत्यक्ष वाटप", "EF प्रत्यक्ष डिजिटिझेशन",
-            "EF दैनिक वाटप लक्षांक पूर्तता %", "EF दैनिक डिजिटिझेशन लक्षांक पूर्तता %",
-            "EF प्रत्यक्ष वाटप पूर्तता %", "EF प्रत्यक्ष डिजिटिझेशन %",
-            "New Target 🎯 EF वाटप/दिवस", "New Target 🎯 EF डिजिटिझेशन/दिवस"
+            "अ. क्र.", "पर्यवेक्षक", "BLO नांव", "भाग क्र.", "एकूण<br>मतदार",
+            "EF वाटप व डिजि.<br>दैनिक लक्षांक", 
+            "EF आज अखेर अपेक्षित<br>वाटप व डिजि.",
+            "EF प्रत्यक्ष<br>वाटप", "EF प्रत्यक्ष<br>डिजि.",
+            "EF दैनिक वाटप<br>लक्षांक पूर्तता %", "EF दैनिक डिजि.<br>लक्षांक पूर्तता %",
+            "EF प्रत्यक्ष वाटप<br>पूर्तता %", "EF प्रत्यक्ष डिजि.<br>पूर्तता %",
+            "New Target 🎯<br>वाटप/दिवस", "New Target 🎯<br>डिजि./दिवस"
         ];
 
         let grandTotals2 = Array(11).fill(0); 
@@ -284,10 +299,11 @@
             
             finalHtml2 += `<table class="target-table"><thead><tr>`;
             
+            // पहिल्या अहवालासारखीच रुंदी (Width) सेट केली आहे
             headers2.forEach(h => {
                 if (h === "पर्यवेक्षक") finalHtml2 += `<th style="width: 8%;">${h}</th>`;
                 else if (h === "BLO नांव") finalHtml2 += `<th style="width: 14%;">${h}</th>`;
-                else if (h === "अ. क्र." || h === "भाग क्र.") finalHtml2 += `<th style="width: 3.5%;">${h}</th>`;
+                else if (h === "अ. क्र." || h === "भाग क्र.") finalHtml2 += `<th style="width: 4%;">${h}</th>`;
                 else finalHtml2 += `<th>${h}</th>`; 
             });
             finalHtml2 += `</tr></thead><tbody>`;
@@ -380,20 +396,6 @@
         btn.classList.replace('btn-success', 'btn-warning');
         btn.disabled = true;
 
-        const el1 = document.getElementById('pdfContent');
-        const el2 = document.getElementById('targetPdfContent');
-
-        // १००% खात्रीशीर उपाय: PDF मध्ये उजवा भाग कट होऊ नये म्हणून, 
-        // कॅमेराला (html2canvas) सांगणे की कंटेनरची रुंदी ही टेबलच्या मूळ scrollWidth एवढीच आहे.
-        const origWidth1 = el1.style.width;
-        const origWidth2 = el2.style.width;
-        
-        el1.style.width = el1.scrollWidth + 'px';
-        el2.style.width = el2.scrollWidth + 'px';
-        
-        el1.style.overflow = 'visible';
-        el2.style.overflow = 'visible';
-
         const now = new Date();
         const d = now.getDate();
         const m = now.getMonth() + 1;
@@ -410,8 +412,7 @@
         
         const originalTitle = document.title;
 
-        // दोन्ही अहवाल लँडस्केप A4 मध्ये सेट आहेत. 
-        // windowWidth ची सेटिंग काढून टेबलच्या scrollWidth चा वापर केला आहे, त्यामुळे दोन्ही परफेक्ट येतील.
+        // दोन्ही अहवालांसाठी आता १००% समान PDF जनरेशन सेटिंग्ज 
         const opt1 = {
             margin:       5,
             filename:     dynamicFileName1,
@@ -431,21 +432,15 @@
         };
 
         document.title = dynamicFileName1.replace('.pdf', '');
-        html2pdf().set(opt1).from(el1).save().then(() => {
+        html2pdf().set(opt1).from(document.getElementById('pdfContent')).save().then(() => {
             
             setTimeout(() => {
                 document.title = dynamicFileName2.replace('.pdf', '');
-                html2pdf().set(opt2).from(el2).save().then(() => {
+                html2pdf().set(opt2).from(document.getElementById('targetPdfContent')).save().then(() => {
                     document.title = originalTitle;
                     btn.innerText = "📄 दोन्ही अहवाल एकत्र डाऊनलोड करा (२ PDF फाईल्स)";
                     btn.classList.replace('btn-warning', 'btn-success');
                     btn.disabled = false;
-                    
-                    // काम झाल्यावर टेबलची रुंदी पूर्ववत करणे
-                    el1.style.width = origWidth1;
-                    el2.style.width = origWidth2;
-                    el1.style.overflow = '';
-                    el2.style.overflow = '';
                 });
             }, 2000);
             
