@@ -11,12 +11,12 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     
     <style>
-        /* संदर्भ कोडनुसार मूळ आणि सुरक्षित फॉन्ट सेटिंग */
+        /* जुन्या कोडमधील मूळ आणि सुरक्षित फॉन्ट व्यवस्था */
         body { background-color: #f4f7f6; font-family: 'Arial Unicode MS', Arial, sans-serif; }
         
         .table-wrapper { overflow-x: auto; background: white; padding: 15px; border-radius: 8px; margin-bottom: 20px;}
         
-        /* संदर्भ कोडनुसार दोन्ही अहवालांची एकसमान टेबल रचना (सुटसुटीत आणि वाचनीय) */
+        /* दोन्ही अहवालांसाठी जुन्या कोडमधील सुटसुटीत आणि अचूक CSS सेटिंग्ज */
         table.original-table, table.target-table { 
             width: 100%; 
             table-layout: auto; 
@@ -31,7 +31,6 @@
             text-align: center; 
             vertical-align: middle; 
             white-space: normal; 
-            word-wrap: break-word; 
             border: 1px solid #777; 
         }
         
@@ -63,7 +62,7 @@
       <ul class="navbar-nav ms-auto">
         <li class="nav-item"><a class="nav-link" href="index.html">🏠 मुख्य डॅशबोर्ड</a></li>
         <li class="nav-item"><a class="nav-link active fw-bold" href="#">📊 प्रगती अहवाल (PDF)</a></li>
-        <li class="nav-item"><a class="nav-link text-warning fw-bold" href="entry.html">📝 BLO डेटा ENTRY</a></li>
+        <li class="nav-item"><a class="nav-link text-warning fw-bold" href="entry.html">📝 BLO डेटा एंट्री</a></li>
       </ul>
     </div>
   </div>
@@ -106,6 +105,7 @@
             .then(data => buildMapping(data))
             .catch(error => alert('Hierarchy डेटा लोड करताना त्रुटी आली!'));
             
+        // वेळेतील सेकंद काढून टाकले आहेत
         reportDateStr = "अहवाल दिनांक व वेळ: " + new Date().toLocaleString('en-IN', { hour12: true, year: 'numeric', month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' });
     });
 
@@ -233,7 +233,7 @@
             finalHtml1 += `</tr>`;
 
             if (index === supervisorNames.length - 1) {
-                finalHtml1 += `<tr class="grandtotal-row"><td colspan="4" style="text-align:right;">सर्व सुपरवायझर (एकंदर बेरीज)</td>`;
+                finalHtml1 += `<tr class="grandtotal-row"><td colspan="4" style="text-align:right;">सर्व充ुपरवायझर (एकंदर बेरीज)</td>`;
                 grandTotals1.forEach(val => finalHtml1 += `<td>${val}</td>`);
                 finalHtml1 += `</tr>`;
             }
@@ -402,7 +402,7 @@
         
         const originalTitle = document.title;
 
-        // संदर्भ कोडप्रमाणे नॅचरल आणि सुरक्षित PDF जनरेशन सेटिंग्ज (नो एक्स्ट्रा विड्थ फोर्स)
+        // दोन्ही अहवालांसाठी जुन्या मूळ संदर्भ कोडप्रमाणे तंतोतंत सारखीच PDF सेटिंग्ज
         const opt1 = {
             margin:       5,
             filename:     dynamicFileName1,
